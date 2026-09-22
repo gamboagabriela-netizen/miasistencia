@@ -1,0 +1,230 @@
+{% extends 'core/base.html' %}
+{% block title %}Agregar Falta{% endblock %}
+{% block page_title %}Registrar Nueva Falta{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 style="margin: 0;"><i class="bi bi-plus-circle"></i> Nueva Falta</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="faltaForm">
+                    {% csrf_token %}
+
+                    <!-- FILTROS DE BUSQUEDA -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Grado</label>
+                            <select class="form-control" id="grado" required>
+                                <option value="">Seleccionar grado</option>
+                                {% for grado in grados %}
+                                    <option value="{{ grado }}">{{ grado }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Curso</label>
+                            <select class="form-control" id="curso" required>
+                                <option value="">Seleccionar curso</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- BUSQUEDA DE ESTUDIANTE -->
+                    <div class="mb-3">
+                        <label class="form-label">Estudiante (Nombre, Apellido o Código)</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="nombreEstudiante"
+                                   placeholder="Buscar estudiante..." autocomplete="off">
+                            <div class="position-absolute" id="sugerenciasDiv"
+                                 style="top: 100%; left: 0; right: 0; background: white;
+                                         border: 1px solid #ddd; border-top: none;
+                                         max-height: 200px; overflow-y: auto;
+                                         z-index: 1000; display: none;">
+                            </div>
+                        </div>
+                        <small class="text-muted">Escribe para buscar o selecciona de la lista</small>
+                        <input type="hidden" id="estudianteId" name="estudiante" required>
+                    </div>
+
+                    <!-- DATOS DE LA FALTA -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Docente</label>
+                                <select class="form-control" name="docente" required>
+                                    <option value="">Seleccionar docente</option>
+                                    {% for doc in docentes %}
+                                        <option value="{{ doc.id }}">{{ doc.nombre }} {{ doc.apellido }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Fecha</label>
+                                <input type="date" class="form-control" name="fecha" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tipo de Falta</label>
+                        <select class="form-control" name="tipo" id="tipo_falta" required>
+                            <option value="">-- Seleccionar --</option>
+                            <option value="dia">Día Completo</option>
+                            <option value="hora">Parcial (Por hora)</option>
+                            <option value="retirada">Retirada</option>
+                        </select>
+                    </div>
+
+                    <!-- CAMPOS CONDICIONALES - SOLO PARA PARCIAL -->
+                    <div id="campos_hora" style="display:none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Hora Desde</label>
+                                    <input type="time" class="form-control" name="hora" id="hora_desde">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Hora Hasta</label>
+                                    <input type="time" class="form-control" name="hora_hasta" id="hora_hasta">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Motivo (Opcional)</label>
+                            <textarea class="form-control" name="motivo" rows="2" placeholder="Describe el motivo de la falta..."></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Guardar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<a href="{% url 'faltas' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Cancelar</a>
+
+<script>
+// Grados disponibles
+const GRADOS = [5, 6, 10, 11];
+
+// Inicializar grados
+document.addEventListener('DOMContentLoaded', function() {
+    const gradoSelect = document.getElementById('grado');
+    GRADOS.forEach(grado => {
+        const option = document.createElement('option');
+        option.value = grado;
+        option.textContent = grado;
+        gradoSelect.appendChild(option);
+    });
+
+    // Cargar cursos cuando se selecciona grado
+    gradoSelect.addEventListener('change', function() {
+        const grado = this.value;
+        const cursoSelect = document.getElementById('curso');
+        cursoSelect.innerHTML = '<option value="">Seleccionar curso</option>';
+
+        if (grado) {
+            fetch(`/api/cursos-por-grado/?grado=${grado}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.cursos.forEach(curso => {
+                        const option = document.createElement('option');
+                        option.value = curso.curso;
+                        option.textContent = `Curso ${curso.curso}`;
+                        cursoSelect.appendChild(option);
+                    });
+                });
+        }
+
+        // Limpiar búsqueda de estudiante
+        document.getElementById('nombreEstudiante').value = '';
+        document.getElementById('estudianteId').value = '';
+    });
+
+    // Búsqueda de estudiante
+    const inputEstudiante = document.getElementById('nombreEstudiante');
+    const sugerenciasDiv = document.getElementById('sugerenciasDiv');
+
+    inputEstudiante.addEventListener('input', function() {
+        const grado = document.getElementById('grado').value;
+        const curso = document.getElementById('curso').value;
+        const nombre = this.value.trim();
+
+        if (!grado || !curso || nombre.length < 1) {
+            sugerenciasDiv.style.display = 'none';
+            return;
+        }
+
+        fetch(`/api/buscar-estudiantes/?grado=${grado}&curso=${curso}&nombre=${nombre}`)
+            .then(response => response.json())
+            .then(data => {
+                sugerenciasDiv.innerHTML = '';
+
+                if (data.estudiantes.length === 0) {
+                    sugerenciasDiv.innerHTML = '<div class="p-2 text-muted">No hay resultados</div>';
+                    sugerenciasDiv.style.display = 'block';
+                    return;
+                }
+
+                data.estudiantes.forEach(est => {
+                    const div = document.createElement('div');
+                    div.className = 'p-2 cursor-pointer';
+                    div.style.cursor = 'pointer';
+                    div.style.borderBottom = '1px solid #eee';
+                    div.textContent = `${est.apellido} ${est.nombre} (${est.codigo})`;
+
+                    div.addEventListener('click', function() {
+                        document.getElementById('nombreEstudiante').value =
+                            `${est.apellido} ${est.nombre} (${est.codigo})`;
+                        document.getElementById('estudianteId').value = est.id;
+                        sugerenciasDiv.style.display = 'none';
+                    });
+
+                    div.addEventListener('mouseover', function() {
+                        this.style.backgroundColor = '#f0f0f0';
+                    });
+
+                    div.addEventListener('mouseout', function() {
+                        this.style.backgroundColor = 'transparent';
+                    });
+
+                    sugerenciasDiv.appendChild(div);
+                });
+
+                sugerenciasDiv.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                sugerenciasDiv.style.display = 'none';
+            });
+    });
+
+    // Ocultar sugerencias al hacer clic afuera
+    document.addEventListener('click', function(e) {
+        if (e.target !== inputEstudiante && e.target !== sugerenciasDiv) {
+            sugerenciasDiv.style.display = 'none';
+        }
+    });
+});
+
+// Mostrar/ocultar campos según tipo de falta
+document.getElementById('tipo_falta').addEventListener('change', function() {
+    document.getElementById('campos_hora').style.display = this.value !== 'dia' ? 'block' : 'none';
+});
+
+// Validar que estudiante esté seleccionado
+document.getElementById('faltaForm').addEventListener('submit', function(e) {
+    const estudianteId = document.getElementById('estudianteId').value;
+    if (!estudianteId) {
+        e.preventDefault();
+        alert('Debe seleccionar un estudiante');
+    }
+});
+</script>
+{% endblock %}

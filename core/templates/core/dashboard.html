@@ -1,0 +1,117 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Dashboard - MiAsistencia{% endblock %}
+{% block page_title %}{% endblock %}
+
+{% block content %}
+<style>
+    .saludo { font-weight: 600; color: var(--verde-oscuro); margin-bottom: 4px; }
+    .saludo-texto { color: #6c757d; margin-bottom: 24px; }
+
+    .tarjeta-menu {
+        display: flex; flex-direction: column; gap: 14px;
+        height: 100%; padding: 22px;
+        background: white; border: 1px solid #e3ebe5; border-radius: 14px;
+        color: inherit; text-decoration: none;
+        transition: all 0.25s;
+    }
+    .tarjeta-menu:hover {
+        transform: translateY(-4px); color: inherit;
+        border-color: var(--verde);
+        box-shadow: 0 10px 24px rgba(6, 64, 43, 0.15);
+    }
+    .tarjeta-icono {
+        width: 46px; height: 46px; border-radius: 12px;
+        background: var(--degradado); color: white;
+        display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    }
+    .tarjeta-titulo { font-weight: 600; font-size: 1.05rem; margin: 0; }
+    .tarjeta-texto { color: #6c757d; font-size: 0.88rem; margin: 2px 0 0; }
+</style>
+
+{% if tipo_usuario == 'Coordinador' %}
+    <h4 class="saludo"><i class="bi bi-clipboard-check"></i> Bienvenido, Coordinador</h4>
+    <p class="saludo-texto">Desde este panel puedes acceder a todas las funciones del sistema.</p>
+
+    <div class="row g-3">
+        <div class="col-12 col-md-6 col-xl-4">
+            <a href="{% url 'cursos' %}" class="tarjeta-menu">
+                <div class="tarjeta-icono"><i class="bi bi-book"></i></div>
+                <div><p class="tarjeta-titulo">Cursos</p><p class="tarjeta-texto">Grados y grupos</p></div>
+            </a>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+            <a href="{% url 'estudiantes' %}" class="tarjeta-menu">
+                <div class="tarjeta-icono"><i class="bi bi-people"></i></div>
+                <div><p class="tarjeta-titulo">Estudiantes</p><p class="tarjeta-texto">Lista, altas y edición</p></div>
+            </a>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+            <a href="{% url 'docentes' %}" class="tarjeta-menu">
+                <div class="tarjeta-icono"><i class="bi bi-person-badge"></i></div>
+                <div><p class="tarjeta-titulo">Docentes</p><p class="tarjeta-texto">Profesores y materias</p></div>
+            </a>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+            <a href="{% url 'faltas' %}" class="tarjeta-menu">
+                <div class="tarjeta-icono"><i class="bi bi-clipboard-check"></i></div>
+                <div><p class="tarjeta-titulo">Faltas</p><p class="tarjeta-texto">Registro completo</p></div>
+            </a>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+            <a href="{% url 'faltas_pendientes' %}" class="tarjeta-menu">
+                <div class="tarjeta-icono"><i class="bi bi-exclamation-circle"></i></div>
+                <div><p class="tarjeta-titulo">Faltas pendientes</p><p class="tarjeta-texto">Por revisar</p></div>
+            </a>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+            <a href="{% url 'estadisticas' %}" class="tarjeta-menu">
+                <div class="tarjeta-icono"><i class="bi bi-graph-up"></i></div>
+                <div><p class="tarjeta-titulo">Estadísticas</p><p class="tarjeta-texto">Faltas por curso</p></div>
+            </a>
+        </div>
+    </div>
+
+{% elif tipo_usuario == 'Docente' %}
+    <h4 class="saludo"><i class="bi bi-person-badge"></i> Bienvenido, Docente</h4>
+    <p class="saludo-texto">Gestiona tus cursos y registra faltas de tus estudiantes.</p>
+
+    <div class="row g-3">
+        <div class="col-12 col-md-6 col-xl-4">
+            <a href="{% url 'cursos' %}" class="tarjeta-menu">
+                <div class="tarjeta-icono"><i class="bi bi-book"></i></div>
+                <div><p class="tarjeta-titulo">Mis cursos</p><p class="tarjeta-texto">Tus grupos</p></div>
+            </a>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+            <a href="{% url 'agregar_falta' %}" class="tarjeta-menu">
+                <div class="tarjeta-icono"><i class="bi bi-pencil-square"></i></div>
+                <div><p class="tarjeta-titulo">Registrar falta</p><p class="tarjeta-texto">Anota una inasistencia</p></div>
+            </a>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+            <a href="{% url 'faltas_pendientes' %}" class="tarjeta-menu">
+                <div class="tarjeta-icono"><i class="bi bi-hourglass"></i></div>
+                <div><p class="tarjeta-titulo">Faltas pendientes</p><p class="tarjeta-texto">Por revisar</p></div>
+            </a>
+        </div>
+    </div>
+
+{% elif tipo_usuario == 'Estudiante' %}
+    <h4 class="saludo"><i class="bi bi-person-circle"></i> Bienvenido, Estudiante</h4>
+    <p class="saludo-texto">Consulta tu historial de faltas y justifica tus inasistencias.</p>
+
+    <div class="row g-3">
+        <div class="col-12 col-md-6 col-xl-4">
+            <a href="{% url 'mi_historial' %}" class="tarjeta-menu">
+                <div class="tarjeta-icono"><i class="bi bi-clock-history"></i></div>
+                <div><p class="tarjeta-titulo">Mi historial</p><p class="tarjeta-texto">Consulta y justifica tus faltas</p></div>
+            </a>
+        </div>
+    </div>
+
+{% else %}
+    <h4>Por favor, inicia sesión</h4>
+    <a href="{% url 'login' %}" class="btn btn-primary">Ir a Login</a>
+{% endif %}
+{% endblock %}

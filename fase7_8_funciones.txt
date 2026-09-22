@@ -1,0 +1,65 @@
+@login_required(login_url="login")
+def cambiar_contrasena_propia(request):
+    """Permitir que coordinador o estudiante cambien su propia contraseña"""
+    if request.method == "POST":
+        contrasena_actual = request.POST.get("contrasena_actual", "")
+        contrasena_nueva = request.POST.get("contrasena_nueva", "")
+        contrasena_confirma = request.POST.get("contrasena_confirma", "")
+
+        usuario = request.user
+
+        # Validaciones
+        if not usuario.check_password(contrasena_actual):
+            messages.error(request, "La contraseña actual es incorrecta.")
+            return render(request, "core/cambiar_contrasena_propia.html")
+
+        if contrasena_nueva != contrasena_confirma:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return render(request, "core/cambiar_contrasena_propia.html")
+
+        if contrasena_nueva == contrasena_actual:
+            messages.error(request, "La nueva contraseña debe ser diferente a la actual.")
+            return render(request, "core/cambiar_contrasena_propia.html")
+
+        if len(contrasena_nueva) < 4:
+            messages.error(request, "La contraseña debe tener al menos 4 caracteres.")
+            return render(request, "core/cambiar_contrasena_propia.html")
+
+        usuario.set_password(contrasena_nueva)
+        usuario.save()
+
+        messages.success(request, "Contraseña cambiada exitosamente.")
+        return redirect("dashboard")
+
+    return render(request, "core/cambiar_contrasena_propia.html")
+
+
+@requiere_coordinador
+def cambiar_contrasena_estudiante(request, id):
+    """Permitir que coordinador cambie contraseña de un estudiante"""
+    estudiante = get_object_or_404(Estudiante, id=id)
+    usuario = get_object_or_404(User, username=estudiante.codigo)
+
+    if request.method == "POST":
+        contrasena_nueva = request.POST.get("contrasena_nueva", "").strip()
+        contrasena_confirma = request.POST.get("contrasena_confirma", "").strip()
+
+        if not contrasena_nueva:
+            messages.error(request, "La contraseña no puede estar vacía.")
+            return render(request, "core/cambiar_contrasena_estudiante.html", {"estudiante": estudiante})
+
+        if contrasena_nueva != contrasena_confirma:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return render(request, "core/cambiar_contrasena_estudiante.html", {"estudiante": estudiante})
+
+        if len(contrasena_nueva) < 4:
+            messages.error(request, "La contraseña debe tener al menos 4 caracteres.")
+            return render(request, "core/cambiar_contrasena_estudiante.html", {"estudiante": estudiante})
+
+        usuario.set_password(contrasena_nueva)
+        usuario.save()
+
+        messages.success(request, f"Contraseña de {estudiante.nombre} cambiada exitosamente.")
+        return redirect("estudiantes")
+
+    return render(request, "core/cambiar_contrasena_estudiante.html", {"estudiante": estudiante})

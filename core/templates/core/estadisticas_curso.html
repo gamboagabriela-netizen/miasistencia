@@ -1,0 +1,226 @@
+{% extends 'core/base.html' %}
+{% block title %}Estadisticas del Curso{% endblock %}
+{% block page_title %}Estadisticas de {{ curso.nombre }}{% endblock %}
+{% block content %}
+<style>
+    .stat-card { border-left: 4px solid; }
+    .stat-card-primary { border-left-color: #2E6F40; }
+    .stat-card-warning { border-left-color: #ffc107; }
+    .stat-card-success { border-left-color: #28a745; }
+    .stat-card-danger { border-left-color: #dc3545; }
+    .stat-number { font-size: 2.5rem; font-weight: bold; }
+    .stat-label { color: #666; font-size: 0.9rem; }
+</style>
+
+<!-- TARJETAS PRINCIPALES -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card stat-card-primary">
+            <div class="card-body">
+                <div class="stat-label">Total de Faltas</div>
+                <div class="stat-number">{{ total_faltas }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card stat-card-warning">
+            <div class="card-body">
+                <div class="stat-label">Pendientes de Revision</div>
+                <div class="stat-number">{{ pendientes }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card stat-card-success">
+            <div class="card-body">
+                <div class="stat-label">Aprobadas</div>
+                <div class="stat-number">{{ aprobadas }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card stat-card-danger">
+            <div class="card-body">
+                <div class="stat-label">Rechazadas</div>
+                <div class="stat-number">{{ rechazadas }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- INFORMACIÓN DEL CURSO -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 style="margin: 0;"><i class="bi bi-info-circle"></i> Informacion del Curso</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <span class="stat-label">Curso:</span>
+                        <p style="font-weight: bold; font-size: 1.1rem;">{{ curso.nombre }}</p>
+                    </div>
+                    <div class="col-6">
+                        <span class="stat-label">Total de Estudiantes:</span>
+                        <p style="font-weight: bold; font-size: 1.1rem;">{{ estudiantes_count }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <span class="stat-label">Promedio Faltas/Estudiante:</span>
+                        <p style="font-weight: bold; font-size: 1.1rem;">{{ promedio_faltas }}</p>
+                    </div>
+                    <div class="col-6">
+                        <span class="stat-label">Sin Faltas:</span>
+                        <p style="font-weight: bold; font-size: 1.1rem;">{{ estudiantes_sin_faltas }}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <span class="stat-label">Tasa de Aprobacion:</span>
+                        <div style="font-weight: bold; font-size: 1.2rem; color: #28a745;">{{ tasa_aprobacion }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 style="margin: 0;"><i class="bi bi-person-check"></i> Estudiante Mas Faltas</h5>
+            </div>
+            <div class="card-body">
+                {% if estudiante_mas_faltas %}
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-person-circle"></i> {{ estudiante_mas_faltas.apellido }} {{ estudiante_mas_faltas.nombre }}</h6>
+                        <p class="mb-0"><strong>Total de faltas:</strong> <span style="font-size: 1.3rem; color: #dc3545;">{{ estudiante_mas_faltas.total }}</span></p>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">No hay faltas registradas.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TOP 3 ESTUDIANTES CON MAS FALTAS -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 style="margin: 0;"><i class="bi bi-graph-up"></i> Top 3 Estudiantes con Mas Faltas</h5>
+            </div>
+            <div class="card-body">
+                {% if top_estudiantes %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%;">Posicion</th>
+                                    <th>Estudiante</th>
+                                    <th style="width: 20%;">Total Faltas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for est in top_estudiantes %}
+                                    <tr>
+                                        <td>
+                                            {% if forloop.counter == 1 %}
+                                                <span class="badge bg-warning text-dark"><i class="bi bi-1-circle"></i></span>
+                                            {% elif forloop.counter == 2 %}
+                                                <span class="badge bg-secondary"><i class="bi bi-2-circle"></i></span>
+                                            {% else %}
+                                                <span class="badge bg-secondary"><i class="bi bi-3-circle"></i></span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ est.apellido }} {{ est.nombre }}</td>
+                                        <td><span class="badge bg-danger">{{ est.total }}</span></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">No hay datos disponibles.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DISTRIBUCION POR TIPO DE FALTA -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 style="margin: 0;"><i class="bi bi-pie-chart"></i> Distribucion por Tipo de Falta</h5>
+            </div>
+            <div class="card-body">
+                {% if faltas_por_tipo %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th style="width: 30%; text-align: right;">Cantidad</th>
+                                    <th style="width: 30%; text-align: right;">Porcentaje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in faltas_por_tipo %}
+                                    <tr>
+                                        <td>{{ item.tipo }}</td>
+                                        <td style="text-align: right;"><strong>{{ item.count }}</strong></td>
+                                        <td style="text-align: right;">
+                                            <span class="badge bg-info">{{ item.porcentaje }}%</span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">No hay datos disponibles.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- DISTRIBUCION POR DOCENTE -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 style="margin: 0;"><i class="bi bi-person-badge"></i> Top Docentes (Mas Faltas Registradas)</h5>
+            </div>
+            <div class="card-body">
+                {% if faltas_por_docente %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Docente</th>
+                                    <th style="width: 30%; text-align: right;">Faltas Registradas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in faltas_por_docente %}
+                                    <tr>
+                                        <td>{{ item.docente__nombre }} {{ item.docente__apellido }}</td>
+                                        <td style="text-align: right;"><span class="badge bg-warning text-dark">{{ item.count }}</span></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">No hay datos disponibles.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'estadisticas' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver a Estadisticas</a>
+{% endblock %}

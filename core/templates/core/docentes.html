@@ -1,0 +1,53 @@
+{% extends 'core/base.html' %}
+{% block title %}Docentes{% endblock %}
+{% block page_title %}Gestionar Docentes{% endblock %}
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-12">
+        <a href="{% url 'agregar_docente' %}" class="btn btn-success"><i class="bi bi-plus-circle"></i> Agregar Docente</a>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 style="margin: 0;"><i class="bi bi-person-badge"></i> Lista de Docentes</h5>
+            </div>
+            <div class="card-body">
+                {% if docentes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Apellido</th>
+                                    <th>Materia</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in docentes %}
+                                    <tr>
+                                        <td>{{ doc.codigo }}</td>
+                                        <td>{{ doc.nombre }}</td>
+                                        <td>{{ doc.apellido }}</td>
+                                        <td>{{ doc.materia }}</td>
+                                        <td>
+                                            <a href="{% url 'editar_docente' doc.id %}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                                            <a href="{% url 'eliminar_docente' doc.id %}" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar?')"><i class="bi bi-trash"></i></a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">No hay docentes registrados.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<a href="{% url 'dashboard' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver</a>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'core/base.html' %}
+{% block title %}Cambiar Contraseña de Estudiante{% endblock %}
+{% block page_title %}Cambiar Contraseña - {{ estudiante.apellido }} {{ estudiante.nombre }}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 style="margin: 0;"><i class="bi bi-lock"></i> Cambiar Contraseña</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3"><strong>Estudiante:</strong> {{ estudiante.apellido }} {{ estudiante.nombre }} ({{ estudiante.codigo }})</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Nueva Contraseña</label>
+                        <input type="password" class="form-control" name="contrasena_nueva" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirmar Nueva Contraseña</label>
+                        <input type="password" class="form-control" name="contrasena_confirma" required>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100"><i class="bi bi-check-circle"></i> Cambiar Contraseña</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<a href="{% url 'estudiantes' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver</a>
+{% endblock %}

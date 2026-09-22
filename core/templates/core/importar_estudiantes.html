@@ -1,0 +1,47 @@
+{% extends 'core/base.html' %}
+{% block title %}Importar Estudiantes{% endblock %}
+{% block page_title %}Importar Estudiantes desde CSV{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 style="margin: 0;"><i class="bi bi-upload"></i> Importar Estudiantes</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Instrucciones:</strong>
+                    <ul style="margin-bottom: 0;">
+                        <li>Descarga la plantilla CSV haciendo click en el botón abajo</li>
+                        <li>Llena los datos: código, nombre, apellido, grado, curso</li>
+                        <li>Grados válidos: 5, 6, 10, 11</li>
+                        <li>Cursos válidos: 01, 02, 05, 06</li>
+                        <li>Ejemplo: grado=10, curso=01 para "Grado 10 - Curso 01"</li>
+                        <li>Sube el archivo CSV completado</li>
+                    </ul>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Selecciona archivo CSV</label>
+                        <input type="file" class="form-control" name="archivo" accept=".csv" required>
+                        <small class="text-muted">Solo archivos .csv</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-cloud-upload"></i> Importar
+                    </button>
+                </form>
+
+                <hr>
+                <p class="text-center mb-0">
+                    <a href="{% url 'descargar_plantilla' %}" class="btn btn-success">
+                        <i class="bi bi-download"></i> Descargar Plantilla CSV
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<a href="{% url 'estudiantes' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver</a>
+{% endblock %}

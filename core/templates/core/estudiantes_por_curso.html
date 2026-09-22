@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Estudiantes por Curso - MiAsistencia{% endblock %}
+{% block page_title %}Estudiantes de {{ curso.nombre }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 style="margin: 0;"><i class="bi bi-people"></i> Estudiantes de {{ curso.nombre }}</h5>
+            </div>
+            <div class="card-body">
+                {% if estudiantes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Apellidos</th>
+                                    <th>Nombres</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for estudiante in estudiantes %}
+                                    <tr>
+                                        <td>{{ estudiante.codigo }}</td>
+                                        <td>{{ estudiante.apellido }}</td>
+                                        <td>{{ estudiante.nombre }}</td>
+                                        <td>
+                                            <a href="{% url 'historial_estudiante' estudiante.id %}?origen=curso&curso={{ curso.id }}" class="btn btn-sm btn-info"><i class="bi bi-clock-history"></i> Historial</a>
+                                            <a href="{% url 'editar_estudiante' estudiante.id %}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i> Editar</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">No hay estudiantes en este curso.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'cursos' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver a Cursos</a>
+{% endblock %}

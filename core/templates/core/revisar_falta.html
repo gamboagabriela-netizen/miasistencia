@@ -1,0 +1,45 @@
+{% extends 'core/base.html' %}
+{% block title %}Revisar Falta{% endblock %}
+{% block page_title %}Revisar Falta Pendiente{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 style="margin: 0;"><i class="bi bi-eye"></i> Detalles de la Falta</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p><strong>Estudiante:</strong> {{ falta.estudiante.apellido }} {{ falta.estudiante.nombre }}</p>
+                        <p><strong>Fecha:</strong> {{ falta.fecha }}</p>
+                        <p><strong>Tipo:</strong> {{ falta.get_tipo_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Docente:</strong> {{ falta.docente.nombre }} {{ falta.docente.apellido }}</p>
+                        <p><strong>Materia:</strong> {{ falta.materia|default:"N/A" }}</p>
+                        <p><strong>Hora:</strong> {{ falta.hora|default:"N/A" }}</p>
+                    </div>
+                </div>
+                <p><strong>Motivo:</strong> {{ falta.motivo }}</p>
+                {% if falta.justificada %}
+                    <div class="alert alert-info">
+                        <strong><i class="bi bi-info-circle"></i> Esta falta ha sido justificada por el estudiante</strong>
+                        <p>Fecha de justificación: {{ falta.fecha_justificacion }}</p>
+                        <p>Observaciones: {{ falta.observaciones }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <form method="POST" class="mt-3">
+            {% csrf_token %}
+            <div class="btn-group w-100" role="group">
+                <button type="submit" name="accion" value="aprobar" class="btn btn-success"><i class="bi bi-check-circle"></i> Aprobar</button>
+                <button type="submit" name="accion" value="rechazar" class="btn btn-danger"><i class="bi bi-x-circle"></i> Rechazar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<a href="{% url 'faltas_pendientes' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver</a>
+{% endblock %}

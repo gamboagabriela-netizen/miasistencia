@@ -1,0 +1,9 @@
+{% load static %}{# Logo de MiAsistencia (imagen). Uso: {% include 'core/_logo.html' %}. El tamaño se controla con CSS sobre .logo-svg #}
+<style>
+    .logo-svg {
+        display: block; width: 64px; height: 64px;
+        border-radius: 50%; object-fit: cover; background: #ffffff;
+        box-shadow: 0 0 0 3px #ffffff, 0 4px 12px rgba(0, 0, 0, 0.25);   /* aro blanco para que resalte sobre el verde */
+    }
+</style>
+<img class="logo-svg" src="{% static 'core/img/logo.png' %}" alt="Logo de MiAsistencia">

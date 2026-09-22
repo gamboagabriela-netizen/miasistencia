@@ -1,0 +1,44 @@
+===== REGISTRO DE ERRORES - REFACTORIZACIÓN SISTEMA CONTROL DE FALTAS =====
+Inicio: 2026-08-25
+=========================================================================
+
+
+[2026-08-25 21:37] [FASE 2 - SCHEMA] [ERROR]
+Problema: Migraciones 0009 y 0010 causaban IntegrityError al intentar cambiar curso de CharField a FK
+Causa: SQLite valida FK durante ALTER TABLE, pero datos existentes no tienen IDs válidos en tabla Curso vacía
+Solución: Revert completo, enfoque pragmático paso a paso
+
+
+[2026-08-25 21:38] [FASE 3 - REFACTOR VIEWS] [OK]
+✓ Decoradores para validar permisos por tipo de usuario implementados
+✓ Dashboard diferenciado por rol
+✓ Nuevas vistas: cursos, estudiantes_por_curso, estadisticas_curso
+✓ Eliminación de función duplicada editar_falta
+✓ Uso de get_object_or_404 para seguridad
+
+
+[2026-08-25 21:42] [FASE 5-6 - FRONTEND Y ASSETS] [OK]
+✓ Base template con Bootstrap 5 y navegación por rol
+✓ Dashboard diferenciado por tipo de usuario
+✓ Todos los templates creados y aplicando Bootstrap 5
+✓ Nuevas vistas: cursos, estudiantes_por_curso, estadisticas_curso
+✓ Sistema de autenticación con decoradores por rol
+✓ Datos de ejemplo cargados: coordinador, docentes, estudiantes, cursos
+
+
+[2026-08-25 21:43] [FASE 7 - COMPILACIÓN Y VERIFICACIÓN] [OK]
+✓ python manage.py check - Sin errores
+✓ Servidor iniciado correctamente
+✓ Login página carga correctamente
+✓ Base de datos migrada correctamente
+✓ Datos de ejemplo cargados
+
+[2026-08-25 21:43] [VERIFICACIÓN FINAL]
+✓ Sistema iniciado sin errores
+✓ Todos los templates creados con Bootstrap 5
+✓ Decoradores de permisos implementados
+✓ Rutas nuevas: /cursos/, /estadisticas/curso/
+✓ 3 tipos de usuario funcionales
+
+ESTADO: REFACTORIZACIÓN COMPLETADA
+

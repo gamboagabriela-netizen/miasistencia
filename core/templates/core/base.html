@@ -1,0 +1,158 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MiAsistencia{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'core/img/favicon.png' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --verde: #2E6F40;
+            --verde-oscuro: #06402B;
+            --degradado: linear-gradient(135deg, var(--verde) 0%, var(--verde-oscuro) 100%);
+            /* Hace que los componentes "primary" de Bootstrap también sean verdes */
+            --bs-primary: #2E6F40;
+            --bs-primary-rgb: 46, 111, 64;
+            --bs-link-color: #2E6F40;
+            --bs-link-hover-color: #06402B;
+        }
+        body { font-family: 'Poppins', sans-serif; display: flex; min-height: 100vh; background-color: #f4f8f5; }
+        .sidebar { width: 250px; background: var(--degradado); color: white; padding: 20px; position: fixed; height: 100vh; overflow-y: auto; }
+        .sidebar h5 { margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 15px; }
+        .sidebar a { color: rgba(255,255,255,0.9); text-decoration: none; display: block; padding: 10px; border-radius: 5px; margin: 5px 0; transition: all 0.3s; }
+        .sidebar a:hover { background: rgba(255,255,255,0.2); transform: translateX(5px); }
+        .sidebar .badge { float: right; }
+        .main-content { margin-left: 250px; width: calc(100% - 250px); padding: 20px; }
+        .navbar-top { background: white; border-bottom: 1px solid #dee2e6; margin-bottom: 20px; padding: 15px 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .user-info { display: flex; align-items: center; gap: 15px; margin-left: auto; }
+        .user-badge { background: rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 20px; font-size: 0.85rem; }
+        .card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 8px; margin-bottom: 20px; }
+        .btn { border-radius: 6px; padding: 8px 16px; font-weight: 500; }
+        .btn-primary { background: var(--degradado); border: none; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(6, 64, 43, 0.4); }
+        .table { background: white; border-radius: 8px; overflow: hidden; }
+        .table thead { background: #f8f9fa; }
+        .badge-pending { background-color: #ffc107; }
+        .badge-aprobada { background-color: #28a745; }
+        .badge-rechazada { background-color: #dc3545; }
+        .card-header.bg-primary { background: var(--degradado) !important; }
+        .form-control:focus, .form-select:focus { border-color: var(--verde); box-shadow: 0 0 0 0.2rem rgba(46, 111, 64, 0.25); }
+        .table thead th { color: var(--verde-oscuro); }
+        .sidebar-marca { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.3); --logo-bg: #ffffff; --logo-fg: var(--verde); font-size: 1.3rem; font-weight: 300; }
+        .sidebar-marca strong { font-weight: 700; }
+        .sidebar-marca .logo-svg { width: 42px; height: 42px; flex-shrink: 0; }
+        /* ---- Menú: sección activa ---- */
+        .sidebar a.active { background: rgba(255,255,255,0.22); color: #ffffff; font-weight: 600; box-shadow: inset 4px 0 0 #ffffff; }
+        .sidebar a.active:hover { transform: none; }
+
+        /* ---- Botones con la paleta verde (los de acción de las tablas son suaves) ---- */
+        .btn-sm { border-radius: 8px; }
+        .btn-success { --bs-btn-color: #fff; --bs-btn-bg: #2E6F40; --bs-btn-border-color: #2E6F40; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: #06402B; --bs-btn-hover-border-color: #06402B; --bs-btn-active-color: #fff; --bs-btn-active-bg: #06402B; --bs-btn-active-border-color: #06402B; --bs-btn-focus-shadow-rgb: 46, 111, 64; }
+        .btn-info { --bs-btn-color: #06402B; --bs-btn-bg: #E1EEE4; --bs-btn-border-color: #E1EEE4; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: #2E6F40; --bs-btn-hover-border-color: #2E6F40; --bs-btn-active-color: #fff; --bs-btn-active-bg: #06402B; --bs-btn-active-border-color: #06402B; --bs-btn-focus-shadow-rgb: 46, 111, 64; }
+        .btn-warning { --bs-btn-color: #6B4700; --bs-btn-bg: #FCEBBF; --bs-btn-border-color: #FCEBBF; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: #C98A0A; --bs-btn-hover-border-color: #C98A0A; --bs-btn-active-color: #fff; --bs-btn-active-bg: #A87205; --bs-btn-active-border-color: #A87205; --bs-btn-focus-shadow-rgb: 201, 138, 10; }
+        .btn-danger { --bs-btn-color: #A32D2D; --bs-btn-bg: #FBE3E3; --bs-btn-border-color: #FBE3E3; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: #C0392B; --bs-btn-hover-border-color: #C0392B; --bs-btn-active-color: #fff; --bs-btn-active-bg: #A32D2D; --bs-btn-active-border-color: #A32D2D; --bs-btn-focus-shadow-rgb: 192, 57, 43; }
+
+        /* ---- Etiquetas de estado suaves ---- */
+        .badge { font-weight: 500; padding: 0.5em 0.9em; border-radius: 999px; }
+        .badge.bg-success   { background-color: #DCEBDF !important; color: #1E5A32 !important; }
+        .badge.bg-danger    { background-color: #FBE3E3 !important; color: #A32D2D !important; }
+        .badge.bg-warning   { background-color: #FFF0C7 !important; color: #7A5200 !important; }
+        .badge.bg-secondary { background-color: #E8ECE9 !important; color: #4A5550 !important; }
+        .badge.bg-info      { background-color: #DCEEF1 !important; color: #0B5563 !important; }
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .main-content { margin-left: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-marca">
+            {% include 'core/_logo.html' %}
+            <span>Mi<strong>Asistencia</strong></span>
+        </div>
+
+        {% if user.is_authenticated %}
+            {% with n=request.resolver_match.url_name %}
+            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; margin-bottom: 20px; font-size: 0.9rem; word-break: break-word;">
+                <i class="bi bi-person-circle"></i> <strong>{{ user.username }}</strong><br>
+                <div style="margin-top: 8px;">
+                    {% if user.is_superuser %}
+                        <span class="user-badge">Coordinador</span>
+                    {% elif user.groups.all.0 %}
+                        <span class="user-badge">{{ user.groups.all.0.name }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if user.is_superuser %}
+                <h6 style="margin-top: 20px; color: rgba(255,255,255,0.7); font-size: 0.8rem; text-transform: uppercase;">MENÚ COORDINADOR</h6>
+                <a href="{% url 'cursos' %}" class="{% if n == 'cursos' or n == 'estudiantes_por_curso' %}active{% endif %}"><i class="bi bi-book"></i> Cursos</a>
+                <a href="{% url 'estudiantes' %}" class="{% if n == 'estudiantes' or n == 'agregar_estudiante' or n == 'importar_estudiantes' or n == 'editar_estudiante' or n == 'historial_estudiante' or n == 'cambiar_contrasena_estudiante' %}active{% endif %}"><i class="bi bi-people"></i> Estudiantes</a>
+                <a href="{% url 'docentes' %}" class="{% if n == 'docentes' or n == 'agregar_docente' or n == 'editar_docente' %}active{% endif %}"><i class="bi bi-person-badge"></i> Docentes</a>
+                <a href="{% url 'faltas' %}" class="{% if n == 'faltas' or n == 'agregar_falta' or n == 'editar_falta' %}active{% endif %}"><i class="bi bi-clipboard-check"></i> Faltas</a>
+                <a href="{% url 'faltas_pendientes' %}" class="{% if n == 'faltas_pendientes' or n == 'revisar_falta' %}active{% endif %}"><i class="bi bi-exclamation-circle"></i> Faltas Pendientes</a>
+                <a href="{% url 'estadisticas' %}" class="{% if n == 'estadisticas' or n == 'estadisticas_curso' %}active{% endif %}"><i class="bi bi-graph-up"></i> Estadísticas</a>
+            {% elif user.groups.all.0.name == 'Docentes' %}
+                <h6 style="margin-top: 20px; color: rgba(255,255,255,0.7); font-size: 0.8rem; text-transform: uppercase;">MENÚ DOCENTE</h6>
+                <a href="{% url 'cursos' %}" class="{% if n == 'cursos' or n == 'estudiantes_por_curso' %}active{% endif %}"><i class="bi bi-book"></i> Mis Cursos</a>
+                <a href="{% url 'agregar_falta' %}" class="{% if n == 'agregar_falta' %}active{% endif %}"><i class="bi bi-pencil-square"></i> Registrar Falta</a>
+                <a href="{% url 'faltas_pendientes' %}" class="{% if n == 'faltas_pendientes' or n == 'revisar_falta' %}active{% endif %}"><i class="bi bi-hourglass"></i> Faltas Pendientes</a>
+            {% elif user.groups.all.0.name == 'Estudiantes' %}
+                <h6 style="margin-top: 20px; color: rgba(255,255,255,0.7); font-size: 0.8rem; text-transform: uppercase;">MI CUENTA</h6>
+                <a href="{% url 'mi_historial' %}" class="{% if n == 'mi_historial' or n == 'justificar_falta' %}active{% endif %}"><i class="bi bi-clock-history"></i> Mi Historial</a>
+            {% endif %}
+
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 20px 0;">
+            <a href="{% url 'logout' %}" style="color: #ff6b6b;"><i class="bi bi-door-left"></i> Cerrar Sesión</a>
+            {% endwith %}
+        {% endif %}
+    </div>
+
+    <div class="main-content">
+        <div class="navbar-top">
+            <h2 style="margin: 0;">{% block page_title %}Dashboard{% endblock %}</h2>
+            <div class="user-info">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i> {{ request.user.username }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        {% if user.is_superuser %}
+                            <li><a class="dropdown-item" href="{% url 'cambiar_contrasena_propia' %}">
+                                <i class="bi bi-lock"></i> Cambiar Contraseña
+                            </a></li>
+                        {% elif user.groups.all.0.name == 'Estudiantes' %}
+                            <li><a class="dropdown-item" href="{% url 'cambiar_contrasena_propia' %}">
+                                <i class="bi bi-lock"></i> Cambiar Contraseña
+                            </a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                            <i class="bi bi-door-left"></i> Cerrar Sesión
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+            <div class="alert-container">
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

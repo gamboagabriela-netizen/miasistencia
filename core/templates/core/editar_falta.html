@@ -1,0 +1,97 @@
+{% extends 'core/base.html' %}
+{% block title %}Editar Falta{% endblock %}
+{% block page_title %}Editar Falta{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 style="margin: 0;"><i class="bi bi-pencil"></i> Editar Falta</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Estudiante</label>
+                                <select class="form-control" name="estudiante" required>
+                                    {% for est in estudiantes %}
+                                        <option value="{{ est.id }}" {% if est.id == falta.estudiante.id %}selected{% endif %}>{{ est.apellido }} {{ est.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Docente</label>
+                                <select class="form-control" name="docente" required>
+                                    {% for doc in docentes %}
+                                        <option value="{{ doc.id }}" {% if doc.id == falta.docente.id %}selected{% endif %}>{{ doc.nombre }} {{ doc.apellido }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Fecha</label>
+                                <input type="date" class="form-control" name="fecha" value="{{ falta.fecha|date:'Y-m-d' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Tipo</label>
+                                <select class="form-control" name="tipo" id="tipo_falta" required>
+                                    <option value="dia" {% if falta.tipo == 'dia' %}selected{% endif %}>Todo el día</option>
+                                    <option value="hora" {% if falta.tipo == 'hora' %}selected{% endif %}>Por hora</option>
+                                    <option value="retirada" {% if falta.tipo == 'retirada' %}selected{% endif %}>Retirada</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Estado</label>
+                                <select class="form-control" name="estado" required>
+                                    <option value="Pendiente" {% if falta.estado == 'Pendiente' %}selected{% endif %}>Pendiente</option>
+                                    <option value="Aprobada" {% if falta.estado == 'Aprobada' %}selected{% endif %}>Aprobada</option>
+                                    <option value="Rechazada" {% if falta.estado == 'Rechazada' %}selected{% endif %}>Rechazada</option>
+                                    <option value="Registrada" {% if falta.estado == 'Registrada' %}selected{% endif %}>Registrada</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="campos_hora" style="display:{% if falta.tipo != 'dia' %}block{% else %}none{% endif %};">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Hora</label>
+                                    <input type="time" class="form-control" name="hora" value="{{ falta.hora }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Materia</label>
+                                    <input type="text" class="form-control" name="materia" value="{{ falta.materia }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Motivo</label>
+                        <textarea class="form-control" name="motivo" rows="3">{{ falta.motivo }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100"><i class="bi bi-check-circle"></i> Actualizar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.getElementById('tipo_falta').addEventListener('change', function() {
+    document.getElementById('campos_hora').style.display = this.value !== 'dia' ? 'block' : 'none';
+});
+</script>
+<a href="{% url 'faltas' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Cancelar</a>
+{% endblock %}

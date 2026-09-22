@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Cursos - MiAsistencia{% endblock %}
+{% block page_title %}Cursos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 style="margin: 0;"><i class="bi bi-book"></i> Lista de Cursos</h5>
+            </div>
+            <div class="card-body">
+                {% if cursos %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Grado</th>
+                                    <th>Curso</th>
+                                    <th>Nombre</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for curso in cursos %}
+                                    <tr>
+                                        <td><strong>{{ curso.grado }}</strong></td>
+                                        <td><strong>{{ curso.curso }}</strong></td>
+                                        <td>{{ curso.nombre }}</td>
+                                        <td>
+                                            <a href="{% url 'estudiantes_por_curso' curso.id %}" class="btn btn-sm btn-info"><i class="bi bi-people"></i> Ver Estudiantes</a>
+                                            <a href="{% url 'estadisticas_curso' curso.id %}" class="btn btn-sm btn-success"><i class="bi bi-graph-up"></i> Estadísticas</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">No hay cursos registrados.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<a href="{% url 'dashboard' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver al Dashboard</a>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'core/base.html' %}
+{% block title %}Historial de Faltas{% endblock %}
+{% block page_title %}Historial de {{ estudiante.apellido }} {{ estudiante.nombre }}{% endblock %}
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 style="margin: 0;"><i class="bi bi-person-circle"></i> {{ estudiante.apellido }} {{ estudiante.nombre }}</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Código:</strong> {{ estudiante.codigo }}</p>
+                <p><strong>Curso:</strong> {{ estudiante.curso }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 style="margin: 0;"><i class="bi bi-clock-history"></i> Historial de Faltas</h5>
+            </div>
+            <div class="card-body">
+                {% if faltas %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Estado</th>
+                                    <th>Justificada</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for falta in faltas %}
+                                    <tr>
+                                        <td>{{ falta.fecha }}</td>
+                                        <td>{{ falta.get_tipo_display }}</td>
+                                        <td>
+                                            {% if falta.estado == 'Pendiente' %}
+                                                <span class="badge bg-warning text-dark">{{ falta.estado }}</span>
+                                            {% elif falta.estado == 'Aprobada' %}
+                                                <span class="badge bg-success">{{ falta.estado }}</span>
+                                            {% elif falta.estado == 'Rechazada' %}
+                                                <span class="badge bg-danger">{{ falta.estado }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ falta.estado }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if falta.justificada %}
+                                                <span class="badge bg-success">Si</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">No</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if not falta.justificada %}
+                                                <a href="{% url 'justificar_falta' falta.id %}" class="btn btn-sm btn-info"><i class="bi bi-file-earmark-text"></i> Justificar</a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-success"><i class="bi bi-check-circle"></i> No hay faltas registradas.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if origen == 'dashboard' %}
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver</a>
+{% elif origen == 'curso' and curso_id %}
+    <a href="{% url 'estudiantes_por_curso' curso_id %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver al curso</a>
+{% else %}
+    <a href="{% url 'estudiantes' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver</a>
+{% endif %}
+{% endblock %}
