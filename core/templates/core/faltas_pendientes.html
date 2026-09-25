@@ -35,7 +35,11 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <a href="{% url 'revisar_falta' falta.id %}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Revisar</a>
+                                            {% if user.is_superuser %}
+                                                <a href="{% url 'revisar_falta' falta.id %}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Revisar</a>
+                                            {% else %}
+                                                <a href="{% url 'revisar_falta' falta.id %}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i> Ver</a>
+                                            {% endif %}
                                         </td>
                                     </tr>
                                 {% endfor %}

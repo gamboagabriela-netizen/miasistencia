@@ -1,0 +1,31 @@
+{% extends 'core/base.html' %}
+{% block title %}Restablecer Contraseña{% endblock %}
+{% block page_title %}Restablecer Contraseña - {{ usuario.username }}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 style="margin: 0;"><i class="bi bi-lock"></i> Restablecer Contraseña</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3"><strong>Usuario:</strong> {{ usuario.username }}</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    {% if solicitud_id %}<input type="hidden" name="solicitud" value="{{ solicitud_id }}">{% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">Nueva Contraseña</label>
+                        <input type="password" class="form-control" name="contrasena_nueva" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirmar Nueva Contraseña</label>
+                        <input type="password" class="form-control" name="contrasena_confirma" required>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100"><i class="bi bi-check-circle"></i> Cambiar Contraseña</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<a href="{% url 'solicitudes_contrasena' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver</a>
+{% endblock %}

@@ -48,4 +48,10 @@ urlpatterns = [
     # Cambio de contraseñas
     path("cambiar-contrasena/", views.cambiar_contrasena_propia, name="cambiar_contrasena_propia"),
     path("estudiantes/<int:id>/cambiar-contrasena/", views.cambiar_contrasena_estudiante, name="cambiar_contrasena_estudiante"),
+
+    # Recuperar contraseña
+    path("olvide-contrasena/", views.olvide_contrasena, name="olvide_contrasena"),
+    path("solicitudes-contrasena/", views.solicitudes_contrasena, name="solicitudes_contrasena"),
+    path("solicitudes-contrasena/<int:id>/atendida/", views.marcar_solicitud_atendida, name="marcar_solicitud_atendida"),
+    path("usuarios/<int:id>/restablecer-contrasena/", views.restablecer_contrasena_usuario, name="restablecer_contrasena_usuario"),
 ]

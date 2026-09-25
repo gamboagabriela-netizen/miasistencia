@@ -121,7 +121,8 @@
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-person"></i></span>
                         <input type="text" class="form-control" id="usuario" name="username"
-                               placeholder="Tu usuario o código" autocomplete="username" required autofocus>
+                               placeholder="Tu usuario o código" autocomplete="username"
+                               autocapitalize="off" autocorrect="off" spellcheck="false" required autofocus>
                     </div>
                 </div>
 
@@ -130,7 +131,8 @@
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-lock"></i></span>
                         <input type="password" class="form-control con-ojo" id="clave" name="password"
-                               placeholder="Tu contraseña" autocomplete="current-password" required>
+                               placeholder="Tu contraseña" autocomplete="current-password"
+                               autocapitalize="off" autocorrect="off" spellcheck="false" required>
                         <button type="button" class="btn-ojo" id="verClave" aria-label="Mostrar u ocultar contraseña">
                             <i class="bi bi-eye"></i>
                         </button>
@@ -154,6 +156,9 @@
                     <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
                 </button>
             </form>
+            <p class="text-center mt-3 mb-0">
+                <a href="{% url 'olvide_contrasena' %}" style="color: var(--verde); text-decoration: none; font-size: 0.9rem;">¿Olvidaste tu contraseña?</a>
+            </p>
         </div>
     </div>
 

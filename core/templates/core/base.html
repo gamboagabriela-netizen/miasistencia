@@ -96,6 +96,7 @@
                 <a href="{% url 'faltas' %}" class="{% if n == 'faltas' or n == 'agregar_falta' or n == 'editar_falta' %}active{% endif %}"><i class="bi bi-clipboard-check"></i> Faltas</a>
                 <a href="{% url 'faltas_pendientes' %}" class="{% if n == 'faltas_pendientes' or n == 'revisar_falta' %}active{% endif %}"><i class="bi bi-exclamation-circle"></i> Faltas Pendientes</a>
                 <a href="{% url 'estadisticas' %}" class="{% if n == 'estadisticas' or n == 'estadisticas_curso' %}active{% endif %}"><i class="bi bi-graph-up"></i> Estadísticas</a>
+                <a href="{% url 'solicitudes_contrasena' %}" class="{% if n == 'solicitudes_contrasena' or n == 'restablecer_contrasena_usuario' %}active{% endif %}"><i class="bi bi-key"></i> Solicitudes de Contraseña</a>
             {% elif user.groups.all.0.name == 'Docentes' %}
                 <h6 style="margin-top: 20px; color: rgba(255,255,255,0.7); font-size: 0.8rem; text-transform: uppercase;">MENÚ DOCENTE</h6>
                 <a href="{% url 'cursos' %}" class="{% if n == 'cursos' or n == 'estudiantes_por_curso' %}active{% endif %}"><i class="bi bi-book"></i> Mis Cursos</a>

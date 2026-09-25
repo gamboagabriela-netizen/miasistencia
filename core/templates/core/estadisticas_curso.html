@@ -222,5 +222,5 @@
     </div>
 </div>
 
-<a href="{% url 'estadisticas' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver a Estadisticas</a>
+<a href="{% if user.is_superuser %}{% url 'estadisticas' %}{% else %}{% url 'cursos' %}{% endif %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> {% if user.is_superuser %}Volver a Estadisticas{% else %}Volver a Cursos{% endif %}</a>
 {% endblock %}

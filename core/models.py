@@ -140,3 +140,15 @@ class Falta(models.Model):
 
     def __str__(self):
         return f"{self.estudiante} - {self.fecha} - {self.get_tipo_display()}"
+
+
+class SolicitudContrasena(models.Model):
+    usuario_texto = models.CharField(max_length=150)
+    fecha = models.DateTimeField(auto_now_add=True)
+    atendida = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-fecha"]
+
+    def __str__(self):
+        return f"{self.usuario_texto} ({self.fecha:%Y-%m-%d %H:%M})"

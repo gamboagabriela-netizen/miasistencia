@@ -1,4 +1,16 @@
-CAMBIOS DE MiAsistencia (version 6, incluye todo lo anterior)
+CAMBIOS DE MiAsistencia (version 8, incluye todo lo anterior)
+
+NOVEDADES DE ESTA VERSION:
+- El login ya no falla por copiar y pegar el usuario o la contraseña.
+- Nueva funcion "Olvide mi contraseña" (enlace en el login).
+- Nueva pagina para el coordinador: "Solicitudes de Contraseña" (menu lateral).
+- Los docentes ya NO pueden aprobar ni rechazar faltas, solo verlas.
+- Al justificar una falta, el estudiante ahora esta obligado a subir un archivo.
+
+COMO APLICARLO:
 1. Abre PowerShell dentro de tu carpeta control_fallas (la que tiene manage.py).
-2. Ejecuta:  Expand-Archive -Path "$HOME\Downloads\miasistencia_cambios_v6.zip" -DestinationPath . -Force
-3. Recarga el navegador con Ctrl + F5.
+2. Ejecuta:  Expand-Archive -Path "$HOME\Downloads\miasistencia_cambios_v8.zip" -DestinationPath . -Force
+3. MUY IMPORTANTE - este ZIP agrega una tabla nueva a la base de datos. Ejecuta:
+   python manage.py migrate
+4. Reinicia el servidor (Ctrl + C y de nuevo "python manage.py runserver").
+5. Recarga el navegador con Ctrl + F5.

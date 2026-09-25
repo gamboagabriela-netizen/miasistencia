@@ -37,5 +37,5 @@
         </div>
     </div>
 </div>
-<a href="{% url 'estudiantes' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Cancelar</a>
+<a href="{% if user.is_superuser %}{% url 'estudiantes' %}{% else %}{% url 'cursos' %}{% endif %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Cancelar</a>
 {% endblock %}

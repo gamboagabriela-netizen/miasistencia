@@ -1,0 +1,60 @@
+{% extends 'core/base.html' %}
+{% block title %}Solicitudes de Contraseña{% endblock %}
+{% block page_title %}Solicitudes de Contraseña{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary">
+                <h5 style="margin: 0;"><i class="bi bi-key"></i> Solicitudes Pendientes</h5>
+            </div>
+            <div class="card-body">
+                {% if solicitudes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Se identifica como</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in solicitudes %}
+                                    <tr>
+                                        <td>{{ s.usuario_texto }}</td>
+                                        <td>
+                                            {% if s.estudiante_rel %}
+                                                <span class="badge bg-info">Estudiante: {{ s.estudiante_rel.apellido }} {{ s.estudiante_rel.nombre }}</span>
+                                            {% elif s.usuario_rel.is_superuser %}
+                                                <span class="badge bg-secondary">Coordinador</span>
+                                            {% elif s.usuario_rel %}
+                                                <span class="badge bg-secondary">Docente</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Usuario no encontrado</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ s.fecha }}</td>
+                                        <td>
+                                            {% if s.estudiante_rel %}
+                                                <a href="{% url 'cambiar_contrasena_estudiante' s.estudiante_rel.id %}" class="btn btn-sm btn-success"><i class="bi bi-key"></i> Restablecer</a>
+                                            {% elif s.usuario_rel %}
+                                                <a href="{% url 'restablecer_contrasena_usuario' s.usuario_rel.id %}?solicitud={{ s.id }}" class="btn btn-sm btn-success"><i class="bi bi-key"></i> Restablecer</a>
+                                            {% endif %}
+                                            <a href="{% url 'marcar_solicitud_atendida' s.id %}" class="btn btn-sm btn-secondary" onclick="return confirm('¿Marcar esta solicitud como atendida sin cambiar la contraseña?');"><i class="bi bi-check2"></i> Descartar</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-success">No hay solicitudes pendientes.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<a href="{% url 'dashboard' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver</a>
+{% endblock %}

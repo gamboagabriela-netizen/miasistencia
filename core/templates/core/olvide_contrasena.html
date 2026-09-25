@@ -1,0 +1,67 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar contraseña - MiAsistencia</title>
+    <link rel="icon" type="image/png" href="{% static 'core/img/favicon.png' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --verde: #2E6F40;
+            --verde-oscuro: #06402B;
+            --degradado: linear-gradient(135deg, var(--verde) 0%, var(--verde-oscuro) 100%);
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh; padding: 20px;
+            display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at top left, var(--verde) 0%, var(--verde-oscuro) 55%, #032a1c 100%);
+        }
+        .card-recuperar {
+            background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            padding: 44px 40px; max-width: 440px; width: 100%;
+        }
+        .card-recuperar .logo-svg { width: 64px; height: 64px; margin: 0 auto 18px; display: block; }
+        .card-recuperar h2 { font-weight: 700; color: var(--verde-oscuro); text-align: center; margin-bottom: 6px; font-size: 1.4rem; }
+        .card-recuperar .subtitulo { color: #777; text-align: center; font-size: 0.9rem; margin-bottom: 26px; }
+        .form-control { border: 1px solid #dde5df; padding: 11px 12px; font-size: 0.95rem; }
+        .form-control:focus { border-color: var(--verde); box-shadow: 0 0 0 0.2rem rgba(46, 111, 64, 0.25); }
+        .btn-enviar { background: var(--degradado); border: none; border-radius: 8px; padding: 12px; font-weight: 600; color: white; }
+        .btn-enviar:hover { color: white; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(6, 64, 43, 0.4); }
+        .alert { border-radius: 8px; font-size: 0.9rem; }
+        .volver { display: block; text-align: center; margin-top: 18px; color: var(--verde); text-decoration: none; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="card-recuperar">
+        {% include 'core/_logo.html' %}
+        <h2>¿Olvidaste tu contraseña?</h2>
+        <p class="subtitulo">Escribe tu usuario y le avisaremos al coordinador para que te ayude a restablecerla.</p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags %}{{ message.tags }}{% else %}success{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label" for="usuario">Tu usuario o código</label>
+                <input type="text" class="form-control" id="usuario" name="usuario"
+                       placeholder="Ej: 2015345 o coordinador" autocapitalize="off" autocorrect="off" spellcheck="false" required autofocus>
+            </div>
+            <button type="submit" class="btn btn-enviar w-100">
+                <i class="bi bi-send"></i> Enviar solicitud
+            </button>
+        </form>
+        <a href="{% url 'login' %}" class="volver"><i class="bi bi-arrow-left"></i> Volver al inicio de sesión</a>
+    </div>
+</body>
+</html>

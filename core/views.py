@@ -9,7 +9,7 @@ from functools import wraps
 import csv
 import io
 
-from .models import Estudiante, Docente, Falta, Curso
+from .models import Estudiante, Docente, Falta, Curso, SolicitudContrasena
 
 
 def _crear_usuario_estudiante(codigo, contraseña):
@@ -66,8 +66,8 @@ def inicio(request):
 
 def login(request):
     if request.method == "POST":
-        username = request.POST["username"]
-        password = request.POST["password"]
+        username = request.POST["username"].strip()
+        password = request.POST["password"].strip()
         tipo_usuario = request.POST["tipo_usuario"]
 
         usuario = authenticate(request, username=username, password=password)
@@ -266,7 +266,9 @@ def editar_estudiante(request, id):
         estudiante.apellido = request.POST["apellido"]
         estudiante.curso = curso.nombre
         estudiante.save()
-        return redirect("estudiantes")
+        if request.user.is_superuser:
+            return redirect("estudiantes")
+        return redirect("estudiantes_por_curso", curso.id)
 
     cursos = Curso.objects.all()
     return render(request, "core/editar_estudiante.html", {
@@ -395,6 +397,7 @@ def api_cursos_por_grado(request):
     return JsonResponse({'cursos': []})
 
 
+@login_required(login_url="login")
 def agregar_falta(request):
     if request.method == "POST":
         tipo = request.POST["tipo"]
@@ -408,7 +411,10 @@ def agregar_falta(request):
             estado="Pendiente",
             motivo=""
         )
-        return redirect("faltas")
+        messages.success(request, "Falta registrada correctamente.")
+        if request.user.is_superuser:
+            return redirect("faltas")
+        return redirect("faltas_pendientes")
 
     grados = sorted(set(Curso.objects.values_list('grado', flat=True)))
     return render(request, "core/agregar_falta.html", {
@@ -462,12 +468,15 @@ def revisar_falta(request, id):
     falta = get_object_or_404(Falta, id=id)
 
     if request.method == "POST":
+        if not request.user.is_superuser:
+            return acceso_denegado(request, "Solo el coordinador puede aprobar o rechazar una falta.")
         accion = request.POST["accion"]
         if accion == "aprobar":
             falta.estado = "Aprobada"
         elif accion == "rechazar":
             falta.estado = "Rechazada"
         falta.save()
+        messages.success(request, "Falta actualizada correctamente.")
         return redirect("faltas_pendientes")
 
     return render(request, "core/revisar_falta.html", {"falta": falta})
@@ -587,14 +596,17 @@ def justificar_falta(request, id):
     falta = get_object_or_404(Falta, id=id)
 
     if request.method == "POST":
+        if "documento" not in request.FILES:
+            messages.error(request, "Debes adjuntar un documento (por ejemplo, la excusa firmada por el acudiente) para justificar la falta.")
+            return render(request, "core/justificar_falta.html", {"falta": falta})
+
         falta.fecha_justificacion = request.POST["fecha_justificacion"]
         falta.observaciones = request.POST["observaciones"]
         falta.justificada = True
-
-        if "documento" in request.FILES:
-            falta.documento = request.FILES["documento"]
+        falta.documento = request.FILES["documento"]
 
         falta.save()
+        messages.success(request, "Justificación enviada correctamente.")
         return redirect("historial_estudiante", falta.estudiante.id)
 
     return render(request, "core/justificar_falta.html", {"falta": falta})
@@ -668,3 +680,68 @@ def cambiar_contrasena_estudiante(request, id):
         return redirect("estudiantes")
 
     return render(request, "core/cambiar_contrasena_estudiante.html", {"estudiante": estudiante})
+
+
+def olvide_contrasena(request):
+    if request.method == "POST":
+        usuario_texto = request.POST.get("usuario", "").strip()
+        if usuario_texto:
+            SolicitudContrasena.objects.create(usuario_texto=usuario_texto)
+        messages.success(
+            request,
+            "Tu solicitud fue enviada. El coordinador se pondrá en contacto contigo para restablecer tu contraseña."
+        )
+        return redirect("olvide_contrasena")
+
+    return render(request, "core/olvide_contrasena.html")
+
+
+@requiere_coordinador
+def solicitudes_contrasena(request):
+    solicitudes = SolicitudContrasena.objects.filter(atendida=False)
+    for s in solicitudes:
+        s.estudiante_rel = Estudiante.objects.filter(codigo=s.usuario_texto).first()
+        s.usuario_rel = User.objects.filter(username=s.usuario_texto).first()
+    return render(request, "core/solicitudes_contrasena.html", {"solicitudes": solicitudes})
+
+
+@requiere_coordinador
+def marcar_solicitud_atendida(request, id):
+    solicitud = get_object_or_404(SolicitudContrasena, id=id)
+    solicitud.atendida = True
+    solicitud.save()
+    messages.success(request, "Solicitud marcada como atendida.")
+    return redirect("solicitudes_contrasena")
+
+
+@requiere_coordinador
+def restablecer_contrasena_usuario(request, id):
+    usuario = get_object_or_404(User, id=id)
+    solicitud_id = request.GET.get("solicitud") or request.POST.get("solicitud")
+
+    if request.method == "POST":
+        contrasena_nueva = request.POST.get("contrasena_nueva", "").strip()
+        contrasena_confirma = request.POST.get("contrasena_confirma", "").strip()
+
+        if not contrasena_nueva:
+            messages.error(request, "La contraseña no puede estar vacía.")
+            return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id})
+
+        if contrasena_nueva != contrasena_confirma:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id})
+
+        if len(contrasena_nueva) < 4:
+            messages.error(request, "La contraseña debe tener al menos 4 caracteres.")
+            return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id})
+
+        usuario.set_password(contrasena_nueva)
+        usuario.save()
+
+        if solicitud_id:
+            SolicitudContrasena.objects.filter(id=solicitud_id).update(atendida=True)
+
+        messages.success(request, f"Contraseña de {usuario.username} restablecida correctamente.")
+        return redirect("solicitudes_contrasena")
+
+    return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id})
