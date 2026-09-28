@@ -1,8 +1,10 @@
+import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
+from django.urls import reverse
 from django.db.models import Count
 from django.http import HttpResponse
 from functools import wraps
@@ -293,12 +295,28 @@ def docentes(request):
 @requiere_coordinador
 def agregar_docente(request):
     if request.method == "POST":
-        Docente.objects.create(
-            codigo=request.POST["codigo"],
+        codigo = request.POST["codigo"].strip()
+        docente = Docente.objects.create(
+            codigo=codigo,
             nombre=request.POST["nombre"],
             apellido=request.POST["apellido"],
             materia=request.POST["materia"]
         )
+
+        grupo_docentes, _ = Group.objects.get_or_create(name="Docentes")
+        usuario_existente = User.objects.filter(username=codigo).first()
+        if usuario_existente:
+            usuario_existente.groups.add(grupo_docentes)
+            docente.usuario = usuario_existente
+            docente.save()
+            messages.success(request, f"Docente agregado. Ya existía una cuenta '{codigo}'; se dejó vinculada a este docente.")
+        else:
+            nuevo_usuario = User.objects.create_user(codigo, password="1234")
+            nuevo_usuario.groups.add(grupo_docentes)
+            docente.usuario = nuevo_usuario
+            docente.save()
+            messages.success(request, f"Docente agregado. Su usuario es '{codigo}' y su contraseña inicial es '1234'.")
+
         return redirect("docentes")
 
     return render(request, "core/agregar_docente.html")
@@ -317,6 +335,31 @@ def editar_docente(request, id):
         return redirect("docentes")
 
     return render(request, "core/editar_docente.html", {"docente": docente})
+
+
+@requiere_coordinador
+def crear_usuario_docente(request, id):
+    docente = get_object_or_404(Docente, id=id)
+
+    if docente.usuario:
+        messages.info(request, "Este docente ya tiene una cuenta.")
+        return redirect("docentes")
+
+    grupo_docentes, _ = Group.objects.get_or_create(name="Docentes")
+    usuario_existente = User.objects.filter(username=docente.codigo).first()
+    if usuario_existente:
+        usuario_existente.groups.add(grupo_docentes)
+        docente.usuario = usuario_existente
+        docente.save()
+        messages.success(request, f"Ya existía una cuenta '{docente.codigo}'; se dejó vinculada a este docente.")
+    else:
+        nuevo_usuario = User.objects.create_user(docente.codigo, password="1234")
+        nuevo_usuario.groups.add(grupo_docentes)
+        docente.usuario = nuevo_usuario
+        docente.save()
+        messages.success(request, f"Usuario creado: '{docente.codigo}', contraseña inicial '1234'.")
+
+    return redirect("docentes")
 
 
 @requiere_coordinador
@@ -397,30 +440,198 @@ def api_cursos_por_grado(request):
     return JsonResponse({'cursos': []})
 
 
+def _es_docente_o_coordinador(usuario):
+    return usuario.is_superuser or usuario.groups.filter(name="Docentes").exists()
+
+
+def _lunes_de(fecha):
+    """Devuelve el lunes de la semana a la que pertenece la fecha."""
+    return fecha - datetime.timedelta(days=fecha.weekday())
+
+
+@login_required(login_url="login")
+def api_estudiantes_curso(request):
+    """Estudiantes de un curso. Si se envía 'inicio', también las faltas de
+    día completo ya registradas en esa semana (lunes a viernes)."""
+    from django.http import JsonResponse
+
+    if not _es_docente_o_coordinador(request.user):
+        return JsonResponse({"estudiantes": []}, status=403)
+
+    curso = Curso.objects.filter(id=request.GET.get("curso_id") or 0).first()
+    if curso is None:
+        return JsonResponse({"curso": "", "estudiantes": []})
+
+    lista = list(Estudiante.objects.filter(curso=curso.nombre).order_by("apellido", "nombre"))
+
+    marcadas = {}
+    try:
+        inicio = _lunes_de(datetime.date.fromisoformat(request.GET.get("inicio", "")))
+    except ValueError:
+        inicio = None
+    if inicio:
+        fin = inicio + datetime.timedelta(days=4)
+        registros = Falta.objects.filter(
+            tipo="dia", estudiante__in=lista, fecha__range=(inicio, fin)
+        ).values_list("estudiante_id", "fecha")
+        for est_id, fecha in registros:
+            marcadas.setdefault(est_id, []).append(fecha.isoformat())
+
+    return JsonResponse({
+        "curso": curso.nombre,
+        "estudiantes": [
+            {
+                "id": e.id,
+                "codigo": e.codigo,
+                "apellido": e.apellido,
+                "nombre": e.nombre,
+                "faltas": marcadas.get(e.id, []),
+            }
+            for e in lista
+        ],
+    })
+
+
 @login_required(login_url="login")
 def agregar_falta(request):
-    if request.method == "POST":
-        tipo = request.POST["tipo"]
+    if not _es_docente_o_coordinador(request.user):
+        return acceso_denegado(request, "Acceso denegado. Solo docentes y coordinador pueden registrar faltas.")
 
-        Falta.objects.create(
-            estudiante=get_object_or_404(Estudiante, id=request.POST["estudiante"]),
-            docente=get_object_or_404(Docente, id=request.POST["docente"]),
-            fecha=request.POST["fecha"],
-            tipo=tipo,
-            hora=request.POST.get("hora", ""),
-            estado="Pendiente",
-            motivo=""
-        )
-        messages.success(request, "Falta registrada correctamente.")
+    docente_actual = Docente.objects.filter(usuario=request.user).first()
+
+    def volver_al_formulario(modo):
+        return redirect(reverse("agregar_falta") + "?modo=" + modo)
+
+    if request.method == "POST":
+        modo = request.POST.get("modo", "semana")
+        if modo not in ("semana", "parcial"):
+            modo = "semana"
+
+        # Docente que reporta: el que inició sesión, o el elegido en el formulario
+        docente = docente_actual
+        if docente is None:
+            docente = Docente.objects.filter(id=request.POST.get("docente") or 0).first()
+        if docente is None:
+            messages.error(request, "Selecciona el docente que reporta la falta.")
+            return volver_al_formulario(modo)
+
+        # ---------- Faltas de día completo, por curso y semana ----------
+        if modo == "semana":
+            curso = Curso.objects.filter(id=request.POST.get("curso_id") or 0).first()
+            try:
+                referencia = datetime.date.fromisoformat(request.POST.get("semana", ""))
+            except ValueError:
+                referencia = None
+            if curso is None or referencia is None:
+                messages.error(request, "Selecciona el grado, el curso y la semana.")
+                return volver_al_formulario("semana")
+
+            lunes = _lunes_de(referencia)
+            fechas_validas = {lunes + datetime.timedelta(days=i) for i in range(5)}
+            estudiantes_curso = {e.id: e for e in Estudiante.objects.filter(curso=curso.nombre)}
+
+            marcadas = set()
+            for valor in request.POST.getlist("falta"):
+                try:
+                    est_txt, fecha_txt = valor.split("|")
+                    est_id = int(est_txt)
+                    fecha = datetime.date.fromisoformat(fecha_txt)
+                except (ValueError, TypeError):
+                    continue
+                if est_id in estudiantes_curso and fecha in fechas_validas:
+                    marcadas.add((est_id, fecha))
+
+            if not marcadas:
+                messages.error(request, "No marcaste ninguna falta.")
+                return volver_al_formulario("semana")
+
+            ya_registradas = set(
+                Falta.objects.filter(
+                    tipo="dia",
+                    estudiante_id__in=estudiantes_curso.keys(),
+                    fecha__in=fechas_validas,
+                ).values_list("estudiante_id", "fecha")
+            )
+            nuevas = [
+                Falta(
+                    estudiante=estudiantes_curso[est_id],
+                    docente=docente,
+                    fecha=fecha,
+                    tipo="dia",
+                    estado="Pendiente",
+                    motivo="",
+                )
+                for est_id, fecha in sorted(marcadas)
+                if (est_id, fecha) not in ya_registradas
+            ]
+            Falta.objects.bulk_create(nuevas)
+
+            omitidas = len(marcadas) - len(nuevas)
+            if nuevas:
+                if len(nuevas) == 1:
+                    texto = "Se registró 1 falta de día completo."
+                else:
+                    texto = f"Se registraron {len(nuevas)} faltas de día completo."
+                if omitidas:
+                    texto += f" ({omitidas} ya estaban registradas y no se repitieron.)"
+                messages.success(request, texto)
+            else:
+                messages.info(request, "Todas las faltas marcadas ya estaban registradas.")
+
+        # ---------- Retiros y faltas por horas ----------
+        else:
+            estudiante = Estudiante.objects.filter(id=request.POST.get("estudiante") or 0).first()
+            try:
+                fecha = datetime.date.fromisoformat(request.POST.get("fecha", ""))
+            except ValueError:
+                fecha = None
+            tipo = request.POST.get("tipo", "")
+            motivo = request.POST.get("motivo", "").strip()
+
+            if estudiante is None or fecha is None or tipo not in ("hora", "retirada"):
+                messages.error(request, "Selecciona el estudiante, la fecha y si es un retiro o una falta por horas.")
+                return volver_al_formulario("parcial")
+
+            if tipo == "hora":
+                hora_desde = request.POST.get("hora", "").strip()
+                hora_hasta = request.POST.get("hora_hasta", "").strip()
+                if not hora_desde or not hora_hasta:
+                    messages.error(request, "Indica la hora desde y la hora hasta.")
+                    return volver_al_formulario("parcial")
+                if hora_hasta <= hora_desde:
+                    messages.error(request, "La hora final debe ser posterior a la hora inicial.")
+                    return volver_al_formulario("parcial")
+                Falta.objects.create(
+                    estudiante=estudiante, docente=docente, fecha=fecha, tipo="hora",
+                    hora=hora_desde, hora_hasta=hora_hasta, motivo=motivo, estado="Pendiente"
+                )
+                messages.success(request, "Falta por horas registrada correctamente.")
+            else:
+                quien_retiro = request.POST.get("quien_retiro", "").strip()
+                quien_da_salida = request.POST.get("quien_da_salida", "").strip()
+                if not motivo or not quien_retiro or not quien_da_salida:
+                    messages.error(request, "Para registrar un retiro indica el motivo, quién retira al estudiante y quién dio la salida.")
+                    return volver_al_formulario("parcial")
+                Falta.objects.create(
+                    estudiante=estudiante, docente=docente, fecha=fecha, tipo="retirada",
+                    motivo=motivo, quien_retiro=quien_retiro, quien_da_salida=quien_da_salida,
+                    estado="Pendiente"
+                )
+                messages.success(request, "Retiro registrado correctamente.")
+
         if request.user.is_superuser:
             return redirect("faltas")
         return redirect("faltas_pendientes")
 
-    grados = sorted(set(Curso.objects.values_list('grado', flat=True)))
+    modo = request.GET.get("modo", "semana")
+    if modo not in ("semana", "parcial"):
+        modo = "semana"
+    grados = sorted(set(Curso.objects.values_list("grado", flat=True)))
     return render(request, "core/agregar_falta.html", {
         "grados": grados,
         "docentes": Docente.objects.all(),
-        "cursos": Curso.objects.all()
+        "docente_actual": docente_actual,
+        "modo": modo,
     })
 
 
@@ -436,6 +647,9 @@ def editar_falta(request, id):
         falta.fecha = request.POST["fecha"]
         falta.tipo = tipo
         falta.hora = request.POST.get("hora", "")
+        falta.hora_hasta = request.POST.get("hora_hasta", "")
+        falta.quien_retiro = request.POST.get("quien_retiro", "").strip()
+        falta.quien_da_salida = request.POST.get("quien_da_salida", "").strip()
         falta.motivo = request.POST.get("motivo", "")
         falta.estado = request.POST["estado"]
         falta.save()
@@ -718,6 +932,7 @@ def marcar_solicitud_atendida(request, id):
 def restablecer_contrasena_usuario(request, id):
     usuario = get_object_or_404(User, id=id)
     solicitud_id = request.GET.get("solicitud") or request.POST.get("solicitud")
+    siguiente = request.GET.get("next") or request.POST.get("next") or "solicitudes_contrasena"
 
     if request.method == "POST":
         contrasena_nueva = request.POST.get("contrasena_nueva", "").strip()
@@ -725,15 +940,15 @@ def restablecer_contrasena_usuario(request, id):
 
         if not contrasena_nueva:
             messages.error(request, "La contraseña no puede estar vacía.")
-            return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id})
+            return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id, "siguiente": siguiente})
 
         if contrasena_nueva != contrasena_confirma:
             messages.error(request, "Las contraseñas no coinciden.")
-            return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id})
+            return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id, "siguiente": siguiente})
 
         if len(contrasena_nueva) < 4:
             messages.error(request, "La contraseña debe tener al menos 4 caracteres.")
-            return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id})
+            return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id, "siguiente": siguiente})
 
         usuario.set_password(contrasena_nueva)
         usuario.save()
@@ -742,6 +957,6 @@ def restablecer_contrasena_usuario(request, id):
             SolicitudContrasena.objects.filter(id=solicitud_id).update(atendida=True)
 
         messages.success(request, f"Contraseña de {usuario.username} restablecida correctamente.")
-        return redirect("solicitudes_contrasena")
+        return redirect(siguiente)
 
-    return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id})
+    return render(request, "core/restablecer_contrasena_usuario.html", {"usuario": usuario, "solicitud_id": solicitud_id, "siguiente": siguiente})

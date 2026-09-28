@@ -1,16 +1,23 @@
-CAMBIOS DE MiAsistencia (version 8, incluye todo lo anterior)
+CAMBIOS DE MiAsistencia (version 9, incluye TODO lo anterior)
 
 NOVEDADES DE ESTA VERSION:
-- El login ya no falla por copiar y pegar el usuario o la contraseña.
-- Nueva funcion "Olvide mi contraseña" (enlace en el login).
-- Nueva pagina para el coordinador: "Solicitudes de Contraseña" (menu lateral).
-- Los docentes ya NO pueden aprobar ni rechazar faltas, solo verlas.
-- Al justificar una falta, el estudiante ahora esta obligado a subir un archivo.
+- Registrar faltas ahora tiene dos pestañas:
+    1) Faltas de dia completo: eliges grado y curso, ves a todos los estudiantes
+       y marcas los dias de la semana (lunes a viernes) en que faltaron.
+    2) Retiros y por horas: el retiro solo pide motivo, quien retira al
+       estudiante y quien dio la salida. Las faltas por horas piden hora desde/hasta.
+- Cambiar contraseña: el coordinador tiene un boton con llave en la lista de
+  Estudiantes y en la de Docentes.
+- Al agregar un docente se crea su usuario automaticamente (usuario = codigo,
+  contraseña inicial 1234). Los docentes que ya existian muestran un boton
+  "Crear usuario".
+- Olvide mi contraseña, solicitudes para el coordinador, el docente ya no aprueba
+  ni rechaza faltas y la justificacion exige adjuntar un archivo.
 
 COMO APLICARLO:
 1. Abre PowerShell dentro de tu carpeta control_fallas (la que tiene manage.py).
-2. Ejecuta:  Expand-Archive -Path "$HOME\Downloads\miasistencia_cambios_v8.zip" -DestinationPath . -Force
-3. MUY IMPORTANTE - este ZIP agrega una tabla nueva a la base de datos. Ejecuta:
+2. Ejecuta:  Expand-Archive -Path "$HOME\Downloads\miasistencia_cambios_v9.zip" -DestinationPath . -Force
+3. MUY IMPORTANTE - este ZIP agrega tablas y campos nuevos a la base de datos:
    python manage.py migrate
 4. Reinicia el servidor (Ctrl + C y de nuevo "python manage.py runserver").
 5. Recarga el navegador con Ctrl + F5.

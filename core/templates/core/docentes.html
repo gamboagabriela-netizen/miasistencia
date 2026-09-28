@@ -35,6 +35,11 @@
                                         <td>{{ doc.materia }}</td>
                                         <td>
                                             <a href="{% url 'editar_docente' doc.id %}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
+                                            {% if doc.usuario %}
+                                                <a href="{% url 'restablecer_contrasena_usuario' doc.usuario.id %}?next=docentes" class="btn btn-sm btn-success"><i class="bi bi-key"></i></a>
+                                            {% else %}
+                                                <a href="{% url 'crear_usuario_docente' doc.id %}" class="btn btn-sm btn-secondary" onclick="return confirm('¿Crear una cuenta para este docente? El usuario será \'{{ doc.codigo }}\' y la contraseña inicial \'1234\'.')"><i class="bi bi-person-plus"></i> Crear usuario</a>
+                                            {% endif %}
                                             <a href="{% url 'eliminar_docente' doc.id %}" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar?')"><i class="bi bi-trash"></i></a>
                                         </td>
                                     </tr>

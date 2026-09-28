@@ -1,104 +1,180 @@
 {% extends 'core/base.html' %}
-{% block title %}Agregar Falta{% endblock %}
-{% block page_title %}Registrar Nueva Falta{% endblock %}
+{% block title %}Registrar Faltas{% endblock %}
+{% block page_title %}Registrar Faltas{% endblock %}
 {% block content %}
-<div class="row">
-    <div class="col-md-8 mx-auto">
+<style>
+    .nav-pills .nav-link { color: var(--verde-oscuro); font-weight: 500; border-radius: 10px; }
+    .nav-pills .nav-link.active { background: var(--degradado); color: #fff; }
+    .tabla-semana th, .tabla-semana td { text-align: center; vertical-align: middle; }
+    .tabla-semana th:nth-child(2), .tabla-semana td:nth-child(2) { text-align: left; }
+    .tabla-semana input[type=checkbox] { width: 1.3rem; height: 1.3rem; cursor: pointer; accent-color: #2E6F40; }
+    .tabla-semana input[type=checkbox]:disabled { cursor: not-allowed; opacity: .55; }
+    .tabla-semana tr.marcada > td { background-color: #e3f0e6; }
+    .dia-fecha { display: block; font-size: .75rem; font-weight: 400; color: #6c757d; }
+</style>
+
+<ul class="nav nav-pills mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if modo == 'semana' %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#pane-semana" type="button" role="tab">
+            <i class="bi bi-calendar-week"></i> Faltas de día completo
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if modo == 'parcial' %}active{% endif %}" data-bs-toggle="pill" data-bs-target="#pane-parcial" type="button" role="tab">
+            <i class="bi bi-box-arrow-right"></i> Retiros y por horas
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- ============ FALTAS DE DÍA COMPLETO (POR CURSO Y SEMANA) ============ -->
+    <div class="tab-pane fade {% if modo == 'semana' %}show active{% endif %}" id="pane-semana" role="tabpanel">
         <div class="card">
-            <div class="card-header bg-success text-white">
-                <h5 style="margin: 0;"><i class="bi bi-plus-circle"></i> Nueva Falta</h5>
+            <div class="card-header bg-primary text-white">
+                <h5 style="margin: 0;"><i class="bi bi-calendar-week"></i> Faltas de día completo por curso</h5>
             </div>
             <div class="card-body">
-                <form method="POST" id="faltaForm">
+                <form method="POST" id="formSemana">
                     {% csrf_token %}
+                    <input type="hidden" name="modo" value="semana">
 
-                    <!-- FILTROS DE BUSQUEDA -->
-                    <div class="row mb-3">
-                        <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Grado</label>
-                            <select class="form-control" id="grado" required>
+                            <select class="form-select" id="s_grado" required>
                                 <option value="">Seleccionar grado</option>
-                                {% for grado in grados %}
-                                    <option value="{{ grado }}">{{ grado }}</option>
-                                {% endfor %}
+                                {% for grado in grados %}<option value="{{ grado }}">{{ grado }}</option>{% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Curso</label>
-                            <select class="form-control" id="curso" required>
+                            <select class="form-select" id="s_curso" name="curso_id" required>
                                 <option value="">Seleccionar curso</option>
                             </select>
                         </div>
-                    </div>
-
-                    <!-- BUSQUEDA DE ESTUDIANTE -->
-                    <div class="mb-3">
-                        <label class="form-label">Estudiante (Nombre, Apellido o Código)</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="nombreEstudiante"
-                                   placeholder="Buscar estudiante..." autocomplete="off">
-                            <div class="position-absolute" id="sugerenciasDiv"
-                                 style="top: 100%; left: 0; right: 0; background: white;
-                                         border: 1px solid #ddd; border-top: none;
-                                         max-height: 200px; overflow-y: auto;
-                                         z-index: 1000; display: none;">
-                            </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Semana (elige cualquier día de ella)</label>
+                            <input type="date" class="form-control" id="s_semana" name="semana" required>
                         </div>
-                        <small class="text-muted">Escribe para buscar o selecciona de la lista</small>
-                        <input type="hidden" id="estudianteId" name="estudiante" required>
-                    </div>
-
-                    <!-- DATOS DE LA FALTA -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
+                        <div class="col-md-3 mb-3">
+                            {% if docente_actual %}
+                                <label class="form-label">Registra</label>
+                                <input type="text" class="form-control" value="{{ docente_actual.nombre }} {{ docente_actual.apellido }}" disabled>
+                            {% else %}
                                 <label class="form-label">Docente</label>
-                                <select class="form-control" name="docente" required>
+                                <select class="form-select" name="docente" required>
                                     <option value="">Seleccionar docente</option>
-                                    {% for doc in docentes %}
-                                        <option value="{{ doc.id }}">{{ doc.nombre }} {{ doc.apellido }}</option>
-                                    {% endfor %}
+                                    {% for doc in docentes %}<option value="{{ doc.id }}">{{ doc.nombre }} {{ doc.apellido }}</option>{% endfor %}
                                 </select>
-                            </div>
+                            {% endif %}
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Fecha</label>
-                                <input type="date" class="form-control" name="fecha" required>
-                            </div>
+                    </div>
+
+                    <p class="text-muted mb-2" id="s_rango">Elige el grado y el curso para ver a los estudiantes.</p>
+
+                    <div class="table-responsive" id="s_contenedor" style="display:none;">
+                        <table class="table table-hover tabla-semana">
+                            <thead id="s_cabecera"></thead>
+                            <tbody id="s_cuerpo"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span class="text-muted" id="s_contador"></span>
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Guardar faltas marcadas</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ RETIROS Y POR HORAS ============ -->
+    <div class="tab-pane fade {% if modo == 'parcial' %}show active{% endif %}" id="pane-parcial" role="tabpanel">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 style="margin: 0;"><i class="bi bi-box-arrow-right"></i> Retiros y faltas por horas</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="formParcial">
+                    {% csrf_token %}
+                    <input type="hidden" name="modo" value="parcial">
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Grado</label>
+                            <select class="form-select" id="p_grado" required>
+                                <option value="">Seleccionar grado</option>
+                                {% for grado in grados %}<option value="{{ grado }}">{{ grado }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Curso</label>
+                            <select class="form-select" id="p_curso" required>
+                                <option value="">Seleccionar curso</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Estudiante</label>
+                            <select class="form-select" id="p_estudiante" name="estudiante" required>
+                                <option value="">Primero elige el curso</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="p_fecha" name="fecha" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">¿Qué vas a registrar?</label>
+                            <select class="form-select" id="p_tipo" name="tipo" required>
+                                <option value="retirada">Retiro</option>
+                                <option value="hora">Falta por horas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {% if docente_actual %}
+                                <label class="form-label">Registra</label>
+                                <input type="text" class="form-control" value="{{ docente_actual.nombre }} {{ docente_actual.apellido }}" disabled>
+                            {% else %}
+                                <label class="form-label">Docente</label>
+                                <select class="form-select" name="docente" required>
+                                    <option value="">Seleccionar docente</option>
+                                    {% for doc in docentes %}<option value="{{ doc.id }}">{{ doc.nombre }} {{ doc.apellido }}</option>{% endfor %}
+                                </select>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Solo para faltas por horas -->
+                    <div id="grupo_horas" class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Hora desde</label>
+                            <input type="time" class="form-control" name="hora">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Hora hasta</label>
+                            <input type="time" class="form-control" name="hora_hasta">
+                        </div>
+                    </div>
+
+                    <!-- Solo para retiros -->
+                    <div id="grupo_retiro" class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">¿Quién retira al estudiante?</label>
+                            <input type="text" class="form-control" name="quien_retiro" placeholder="Ej: Su mamá, María Pérez" maxlength="150">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">¿Quién dio la salida?</label>
+                            <input type="text" class="form-control" name="quien_da_salida" placeholder="Ej: Coordinador, Carlos López" maxlength="150">
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Tipo de Falta</label>
-                        <select class="form-control" name="tipo" id="tipo_falta" required>
-                            <option value="">-- Seleccionar --</option>
-                            <option value="dia">Día Completo</option>
-                            <option value="hora">Parcial (Por hora)</option>
-                            <option value="retirada">Retirada</option>
-                        </select>
-                    </div>
-
-                    <!-- CAMPOS CONDICIONALES - SOLO PARA PARCIAL -->
-                    <div id="campos_hora" style="display:none;">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Hora Desde</label>
-                                    <input type="time" class="form-control" name="hora" id="hora_desde">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Hora Hasta</label>
-                                    <input type="time" class="form-control" name="hora_hasta" id="hora_hasta">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Motivo (Opcional)</label>
-                            <textarea class="form-control" name="motivo" rows="2" placeholder="Describe el motivo de la falta..."></textarea>
-                        </div>
+                        <label class="form-label" id="p_motivo_label">Motivo</label>
+                        <textarea class="form-control" id="p_motivo" name="motivo" rows="2" placeholder="Describe el motivo..."></textarea>
                     </div>
 
                     <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Guardar</button>
@@ -107,124 +183,178 @@
         </div>
     </div>
 </div>
+
 <a href="{% if user.is_superuser %}{% url 'faltas' %}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Cancelar</a>
 
 <script>
-// Grados disponibles
-const GRADOS = [5, 6, 10, 11];
+(function () {
+    const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
 
-// Inicializar grados
-document.addEventListener('DOMContentLoaded', function() {
-    const gradoSelect = document.getElementById('grado');
-    GRADOS.forEach(grado => {
-        const option = document.createElement('option');
-        option.value = grado;
-        option.textContent = grado;
-        gradoSelect.appendChild(option);
-    });
+    // ---------- utilidades de fecha (se calcula en hora local, sin desfases) ----------
+    function aISO(d) {
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dia = String(d.getDate()).padStart(2, '0');
+        return d.getFullYear() + '-' + m + '-' + dia;
+    }
+    function desdeISO(txt) {
+        const p = txt.split('-');
+        return new Date(+p[0], +p[1] - 1, +p[2]);
+    }
+    function lunesDe(d) {
+        const r = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        r.setDate(r.getDate() - ((r.getDay() + 6) % 7));
+        return r;
+    }
+    function corta(d) {
+        return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+    }
 
-    // Cargar cursos cuando se selecciona grado
-    gradoSelect.addEventListener('change', function() {
-        const grado = this.value;
-        const cursoSelect = document.getElementById('curso');
-        cursoSelect.innerHTML = '<option value="">Seleccionar curso</option>';
-
-        if (grado) {
-            fetch(`/api/cursos-por-grado/?grado=${grado}`)
-                .then(response => response.json())
+    // ---------- carga de cursos por grado ----------
+    function cargarCursos(selectGrado, selectCurso, alCambiar) {
+        let ultima = 0;
+        selectGrado.addEventListener('change', function () {
+            const mia = ++ultima;
+            selectCurso.innerHTML = '<option value="">Seleccionar curso</option>';
+            alCambiar();
+            if (!this.value) return;
+            fetch('/api/cursos-por-grado/?grado=' + encodeURIComponent(this.value))
+                .then(r => r.json())
                 .then(data => {
-                    data.cursos.forEach(curso => {
-                        const option = document.createElement('option');
-                        option.value = curso.curso;
-                        option.textContent = `Curso ${curso.curso}`;
-                        cursoSelect.appendChild(option);
+                    if (mia !== ultima) return;   // llegó una respuesta vieja: se ignora
+                    data.cursos.forEach(c => {
+                        const o = document.createElement('option');
+                        o.value = c.id;
+                        o.textContent = c.nombre + ' (Curso ' + c.curso + ')';
+                        selectCurso.appendChild(o);
                     });
                 });
-        }
+        });
+    }
 
-        // Limpiar búsqueda de estudiante
-        document.getElementById('nombreEstudiante').value = '';
-        document.getElementById('estudianteId').value = '';
-    });
+    // =====================================================================
+    //  PESTAÑA 1: faltas de día completo (semana)
+    // =====================================================================
+    const sGrado = document.getElementById('s_grado');
+    const sCurso = document.getElementById('s_curso');
+    const sSemana = document.getElementById('s_semana');
+    const sRango = document.getElementById('s_rango');
+    const sCont = document.getElementById('s_contenedor');
+    const sCabecera = document.getElementById('s_cabecera');
+    const sCuerpo = document.getElementById('s_cuerpo');
+    const sContador = document.getElementById('s_contador');
 
-    // Búsqueda de estudiante
-    const inputEstudiante = document.getElementById('nombreEstudiante');
-    const sugerenciasDiv = document.getElementById('sugerenciasDiv');
+    sSemana.value = aISO(new Date());
 
-    inputEstudiante.addEventListener('input', function() {
-        const grado = document.getElementById('grado').value;
-        const curso = document.getElementById('curso').value;
-        const nombre = this.value.trim();
+    function actualizarContador() {
+        const n = sCuerpo.querySelectorAll('input[type=checkbox]:checked:not(:disabled)').length;
+        sContador.textContent = n ? (n + (n === 1 ? ' falta marcada' : ' faltas marcadas')) : '';
+        sCuerpo.querySelectorAll('tr').forEach(tr => {
+            tr.classList.toggle('marcada', !!tr.querySelector('input:checked'));
+        });
+    }
 
-        if (!grado || !curso || nombre.length < 1) {
-            sugerenciasDiv.style.display = 'none';
+    let ultimaSemana = 0;
+    function cargarSemana() {
+        const mia = ++ultimaSemana;
+        if (!sCurso.value || !sSemana.value) {
+            sCont.style.display = 'none';
+            sRango.textContent = 'Elige el grado y el curso para ver a los estudiantes.';
+            actualizarContador();
             return;
         }
+        const lunes = lunesDe(desdeISO(sSemana.value));
+        const fechas = DIAS.map((_, i) => { const d = new Date(lunes); d.setDate(d.getDate() + i); return d; });
+        sRango.innerHTML = 'Semana del <strong>' + corta(fechas[0]) + '</strong> al <strong>' + corta(fechas[4]) + '</strong>. Marca los días en que faltó cada estudiante.';
 
-        fetch(`/api/buscar-estudiantes/?grado=${grado}&curso=${curso}&nombre=${nombre}`)
-            .then(response => response.json())
+        fetch('/api/estudiantes-curso/?curso_id=' + encodeURIComponent(sCurso.value) + '&inicio=' + aISO(lunes))
+            .then(r => r.json())
             .then(data => {
-                sugerenciasDiv.innerHTML = '';
+                if (mia !== ultimaSemana) return;   // llegó una respuesta vieja: se ignora
+                let cab = '<tr><th style="width:40px">#</th><th>Estudiante</th>';
+                fechas.forEach((d, i) => { cab += '<th>' + DIAS[i] + '<span class="dia-fecha">' + corta(d) + '</span></th>'; });
+                sCabecera.innerHTML = cab + '</tr>';
 
-                if (data.estudiantes.length === 0) {
-                    sugerenciasDiv.innerHTML = '<div class="p-2 text-muted">No hay resultados</div>';
-                    sugerenciasDiv.style.display = 'block';
-                    return;
+                sCuerpo.innerHTML = '';
+                if (!data.estudiantes.length) {
+                    sCuerpo.innerHTML = '<tr><td colspan="7" class="text-muted">Este curso no tiene estudiantes.</td></tr>';
                 }
-
-                data.estudiantes.forEach(est => {
-                    const div = document.createElement('div');
-                    div.className = 'p-2 cursor-pointer';
-                    div.style.cursor = 'pointer';
-                    div.style.borderBottom = '1px solid #eee';
-                    div.textContent = `${est.apellido} ${est.nombre} (${est.codigo})`;
-
-                    div.addEventListener('click', function() {
-                        document.getElementById('nombreEstudiante').value =
-                            `${est.apellido} ${est.nombre} (${est.codigo})`;
-                        document.getElementById('estudianteId').value = est.id;
-                        sugerenciasDiv.style.display = 'none';
+                data.estudiantes.forEach((e, idx) => {
+                    const tr = document.createElement('tr');
+                    let html = '<td>' + (idx + 1) + '</td><td>' + e.apellido + ' ' + e.nombre + ' <small class="text-muted">(' + e.codigo + ')</small></td>';
+                    fechas.forEach(d => {
+                        const iso = aISO(d);
+                        const ya = e.faltas.indexOf(iso) !== -1;
+                        html += '<td><input type="checkbox" name="falta" value="' + e.id + '|' + iso + '"' +
+                                (ya ? ' checked disabled title="Ya estaba registrada"' : '') + '></td>';
                     });
-
-                    div.addEventListener('mouseover', function() {
-                        this.style.backgroundColor = '#f0f0f0';
-                    });
-
-                    div.addEventListener('mouseout', function() {
-                        this.style.backgroundColor = 'transparent';
-                    });
-
-                    sugerenciasDiv.appendChild(div);
+                    tr.innerHTML = html;
+                    sCuerpo.appendChild(tr);
                 });
-
-                sugerenciasDiv.style.display = 'block';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                sugerenciasDiv.style.display = 'none';
+                sCont.style.display = 'block';
+                actualizarContador();
             });
-    });
+    }
 
-    // Ocultar sugerencias al hacer clic afuera
-    document.addEventListener('click', function(e) {
-        if (e.target !== inputEstudiante && e.target !== sugerenciasDiv) {
-            sugerenciasDiv.style.display = 'none';
+    cargarCursos(sGrado, sCurso, cargarSemana);
+    sCurso.addEventListener('change', cargarSemana);
+    sSemana.addEventListener('change', cargarSemana);
+    sCuerpo.addEventListener('change', actualizarContador);
+
+    document.getElementById('formSemana').addEventListener('submit', function (e) {
+        if (!sCuerpo.querySelector('input[type=checkbox]:checked:not(:disabled)')) {
+            e.preventDefault();
+            alert('Marca al menos una falta antes de guardar.');
         }
     });
-});
 
-// Mostrar/ocultar campos según tipo de falta
-document.getElementById('tipo_falta').addEventListener('change', function() {
-    document.getElementById('campos_hora').style.display = this.value !== 'dia' ? 'block' : 'none';
-});
+    // =====================================================================
+    //  PESTAÑA 2: retiros y por horas
+    // =====================================================================
+    const pGrado = document.getElementById('p_grado');
+    const pCurso = document.getElementById('p_curso');
+    const pEstudiante = document.getElementById('p_estudiante');
+    const pTipo = document.getElementById('p_tipo');
+    const grupoHoras = document.getElementById('grupo_horas');
+    const grupoRetiro = document.getElementById('grupo_retiro');
+    const pMotivo = document.getElementById('p_motivo');
+    const pMotivoLabel = document.getElementById('p_motivo_label');
 
-// Validar que estudiante esté seleccionado
-document.getElementById('faltaForm').addEventListener('submit', function(e) {
-    const estudianteId = document.getElementById('estudianteId').value;
-    if (!estudianteId) {
-        e.preventDefault();
-        alert('Debe seleccionar un estudiante');
+    document.getElementById('p_fecha').value = aISO(new Date());
+
+    let ultimaLista = 0;
+    function cargarEstudiantes() {
+        const mia = ++ultimaLista;
+        pEstudiante.innerHTML = '<option value="">' + (pCurso.value ? 'Cargando...' : 'Primero elige el curso') + '</option>';
+        if (!pCurso.value) return;
+        fetch('/api/estudiantes-curso/?curso_id=' + encodeURIComponent(pCurso.value))
+            .then(r => r.json())
+            .then(data => {
+                if (mia !== ultimaLista) return;   // llegó una respuesta vieja: se ignora
+                pEstudiante.innerHTML = '<option value="">Seleccionar estudiante</option>';
+                data.estudiantes.forEach(e => {
+                    const o = document.createElement('option');
+                    o.value = e.id;
+                    o.textContent = e.apellido + ' ' + e.nombre + ' (' + e.codigo + ')';
+                    pEstudiante.appendChild(o);
+                });
+            });
     }
-});
+    cargarCursos(pGrado, pCurso, cargarEstudiantes);
+    pCurso.addEventListener('change', cargarEstudiantes);
+
+    // Muestra solo los campos que corresponden. Los campos ocultos se desactivan
+    // para que no bloqueen el envío del formulario.
+    function ajustarTipo() {
+        const esRetiro = pTipo.value === 'retirada';
+        grupoRetiro.style.display = esRetiro ? '' : 'none';
+        grupoHoras.style.display = esRetiro ? 'none' : '';
+        grupoRetiro.querySelectorAll('input').forEach(i => { i.disabled = !esRetiro; i.required = esRetiro; });
+        grupoHoras.querySelectorAll('input').forEach(i => { i.disabled = esRetiro; i.required = !esRetiro; });
+        pMotivo.required = esRetiro;
+        pMotivoLabel.textContent = esRetiro ? 'Motivo' : 'Motivo (opcional)';
+    }
+    pTipo.addEventListener('change', ajustarTipo);
+    ajustarTipo();
+})();
 </script>
 {% endblock %}

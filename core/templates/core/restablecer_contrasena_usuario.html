@@ -13,6 +13,7 @@
                 <form method="POST">
                     {% csrf_token %}
                     {% if solicitud_id %}<input type="hidden" name="solicitud" value="{{ solicitud_id }}">{% endif %}
+                    {% if siguiente %}<input type="hidden" name="next" value="{{ siguiente }}">{% endif %}
                     <div class="mb-3">
                         <label class="form-label">Nueva Contraseña</label>
                         <input type="password" class="form-control" name="contrasena_nueva" required>
@@ -27,5 +28,5 @@
         </div>
     </div>
 </div>
-<a href="{% url 'solicitudes_contrasena' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver</a>
+<a href="{% url siguiente|default:'solicitudes_contrasena' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Volver</a>
 {% endblock %}

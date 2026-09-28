@@ -27,6 +27,7 @@ urlpatterns = [
     path("docentes/agregar/", views.agregar_docente, name="agregar_docente"),
     path("docentes/editar/<int:id>/", views.editar_docente, name="editar_docente"),
     path("docentes/eliminar/<int:id>/", views.eliminar_docente, name="eliminar_docente"),
+    path("docentes/<int:id>/crear-usuario/", views.crear_usuario_docente, name="crear_usuario_docente"),
 
     # Faltas
     path("faltas/", views.faltas, name="faltas"),
@@ -40,6 +41,7 @@ urlpatterns = [
     # APIs para búsqueda
     path("api/buscar-estudiantes/", views.api_buscar_estudiantes, name="api_buscar_estudiantes"),
     path("api/cursos-por-grado/", views.api_cursos_por_grado, name="api_cursos_por_grado"),
+    path("api/estudiantes-curso/", views.api_estudiantes_curso, name="api_estudiantes_curso"),
 
     # Estadísticas (Nueva funcionalidad)
     path("estadisticas/", views.estadisticas, name="estadisticas"),

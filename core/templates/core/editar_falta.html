@@ -62,18 +62,40 @@
                             </div>
                         </div>
                     </div>
-                    <div id="campos_hora" style="display:{% if falta.tipo != 'dia' %}block{% else %}none{% endif %};">
+                    <div id="campos_hora" style="display:{% if falta.tipo == 'hora' %}block{% else %}none{% endif %};">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Hora desde</label>
+                                    <input type="time" class="form-control" name="hora" value="{{ falta.hora }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Hora hasta</label>
+                                    <input type="time" class="form-control" name="hora_hasta" value="{{ falta.hora_hasta }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Materia</label>
+                                    <input type="text" class="form-control" name="materia" value="{{ falta.materia }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="campos_retiro" style="display:{% if falta.tipo == 'retirada' %}block{% else %}none{% endif %};">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Hora</label>
-                                    <input type="time" class="form-control" name="hora" value="{{ falta.hora }}">
+                                    <label class="form-label">¿Quién retira al estudiante?</label>
+                                    <input type="text" class="form-control" name="quien_retiro" value="{{ falta.quien_retiro }}" maxlength="150">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Materia</label>
-                                    <input type="text" class="form-control" name="materia" value="{{ falta.materia }}">
+                                    <label class="form-label">¿Quién dio la salida?</label>
+                                    <input type="text" class="form-control" name="quien_da_salida" value="{{ falta.quien_da_salida }}" maxlength="150">
                                 </div>
                             </div>
                         </div>
@@ -90,7 +112,8 @@
 </div>
 <script>
 document.getElementById('tipo_falta').addEventListener('change', function() {
-    document.getElementById('campos_hora').style.display = this.value !== 'dia' ? 'block' : 'none';
+    document.getElementById('campos_hora').style.display = this.value === 'hora' ? 'block' : 'none';
+    document.getElementById('campos_retiro').style.display = this.value === 'retirada' ? 'block' : 'none';
 });
 </script>
 <a href="{% url 'faltas' %}" class="btn btn-secondary mt-3"><i class="bi bi-arrow-left"></i> Cancelar</a>

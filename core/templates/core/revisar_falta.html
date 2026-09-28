@@ -18,10 +18,14 @@
                     <div class="col-md-6">
                         <p><strong>Docente:</strong> {{ falta.docente.nombre }} {{ falta.docente.apellido }}</p>
                         <p><strong>Materia:</strong> {{ falta.materia|default:"N/A" }}</p>
-                        <p><strong>Hora:</strong> {{ falta.hora|default:"N/A" }}</p>
+                        <p><strong>Hora:</strong> {% if falta.hora and falta.hora_hasta %}{{ falta.hora }} a {{ falta.hora_hasta }}{% else %}{{ falta.hora|default:"N/A" }}{% endif %}</p>
                     </div>
                 </div>
-                <p><strong>Motivo:</strong> {{ falta.motivo }}</p>
+                {% if falta.tipo == 'retirada' %}
+                    <p><strong>Retira al estudiante:</strong> {{ falta.quien_retiro|default:"N/A" }}</p>
+                    <p><strong>Dio la salida:</strong> {{ falta.quien_da_salida|default:"N/A" }}</p>
+                {% endif %}
+                <p><strong>Motivo:</strong> {{ falta.motivo|default:"N/A" }}</p>
                 {% if falta.justificada %}
                     <div class="alert alert-info">
                         <strong><i class="bi bi-info-circle"></i> Esta falta ha sido justificada por el estudiante</strong>

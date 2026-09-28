@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -39,6 +40,16 @@ class Docente(models.Model):
     apellido = models.CharField(max_length=100)
     materia = models.CharField(max_length=100)
 
+    # Cuenta con la que el docente inicia sesión. Puede ser nula en
+    # docentes antiguos que todavía no tienen una cuenta creada.
+    usuario = models.OneToOneField(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="docente_perfil"
+    )
+
     def __str__(self):
         return f"{self.apellido} {self.nombre}"
 
@@ -72,14 +83,25 @@ class Falta(models.Model):
         choices=TIPO_FALTA
     )
 
-    # Para las inasistencias por hora
+    # Para las inasistencias por hora (hora = desde, hora_hasta = hasta)
     hora = models.CharField(
+        max_length=20,
+        blank=True
+    )
+
+    hora_hasta = models.CharField(
         max_length=20,
         blank=True
     )
 
     # Información específica de una retirada
     quien_retiro = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    # Quién autorizó / dio la salida del estudiante en el colegio
+    quien_da_salida = models.CharField(
         max_length=150,
         blank=True
     )

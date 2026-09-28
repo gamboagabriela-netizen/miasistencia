@@ -40,6 +40,7 @@
                                         <td>{{ est.curso }}</td>
                                         <td>
                                             <a href="{% url 'historial_estudiante' est.id %}" class="btn btn-sm btn-info"><i class="bi bi-clock-history"></i></a>
+                                            <a href="{% url 'cambiar_contrasena_estudiante' est.id %}" class="btn btn-sm btn-success"><i class="bi bi-key"></i></a>
                                             <a href="{% url 'editar_estudiante' est.id %}" class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></a>
                                             <a href="{% url 'eliminar_estudiante' est.id %}" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar?')"><i class="bi bi-trash"></i></a>
                                         </td>
