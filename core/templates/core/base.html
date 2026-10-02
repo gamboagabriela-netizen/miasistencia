@@ -122,15 +122,9 @@
                         <i class="bi bi-person-circle"></i> {{ request.user.username }}
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        {% if user.is_superuser %}
-                            <li><a class="dropdown-item" href="{% url 'cambiar_contrasena_propia' %}">
-                                <i class="bi bi-lock"></i> Cambiar Contraseña
-                            </a></li>
-                        {% elif user.groups.all.0.name == 'Estudiantes' %}
-                            <li><a class="dropdown-item" href="{% url 'cambiar_contrasena_propia' %}">
-                                <i class="bi bi-lock"></i> Cambiar Contraseña
-                            </a></li>
-                        {% endif %}
+                        <li><a class="dropdown-item" href="{% url 'cambiar_contrasena_propia' %}">
+                            <i class="bi bi-lock"></i> Cambiar Contraseña
+                        </a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
                             <i class="bi bi-door-left"></i> Cerrar Sesión

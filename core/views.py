@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
+from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.urls import reverse
 from django.db.models import Count
@@ -14,14 +15,23 @@ import io
 from .models import Estudiante, Docente, Falta, Curso, SolicitudContrasena
 
 
-def _crear_usuario_estudiante(codigo, contraseña):
-    """Crea usuario para estudiante si no existe. Usuario = Código."""
+def _crear_usuario_estudiante(codigo, contraseña, password_hash=None):
+    """Crea usuario para estudiante si no existe. Usuario = Código.
+
+    Si se pasa password_hash (ya calculado) se reutiliza en vez de calcular uno
+    nuevo: el hash de contraseña es lento a propósito y, al importar muchos
+    estudiantes, hacerlo uno por uno hacía que el servidor se agotara (error 502).
+    """
     try:
         if not User.objects.filter(username=codigo).exists():
-            usuario = User.objects.create_user(
-                username=codigo,
-                password=contraseña
-            )
+            if password_hash:
+                usuario = User(username=codigo, password=password_hash)
+                usuario.save()
+            else:
+                usuario = User.objects.create_user(
+                    username=codigo,
+                    password=contraseña
+                )
             grupo_estudiantes, _ = Group.objects.get_or_create(name="Estudiantes")
             usuario.groups.add(grupo_estudiantes)
     except Exception as e:
@@ -193,6 +203,10 @@ def importar_estudiantes(request):
             errores = 0
             errores_detalle = []
 
+            # Se calcula UNA sola vez el hash de la contraseña inicial (es un
+            # cálculo lento) y se reutiliza para todos los estudiantes nuevos.
+            hash_inicial = make_password("1234")
+
             for row in reader:
                 try:
                     codigo = row.get('codigo', '').strip()
@@ -207,6 +221,11 @@ def importar_estudiantes(request):
                         continue
 
                     if Estudiante.objects.filter(codigo=codigo).exists():
+                        # Si quedó sin usuario (importación interrumpida), se le crea
+                        if not User.objects.filter(username=codigo).exists():
+                            _crear_usuario_estudiante(codigo, "1234", hash_inicial)
+                            exitosos += 1
+                            continue
                         errores += 1
                         errores_detalle.append(f"Código {codigo} duplicado")
                         continue
@@ -233,7 +252,7 @@ def importar_estudiantes(request):
                         curso=nombre_curso
                     )
 
-                    _crear_usuario_estudiante(codigo, "1234")
+                    _crear_usuario_estudiante(codigo, "1234", hash_inicial)
                     exitosos += 1
 
                 except Exception as e:
@@ -444,6 +463,15 @@ def _es_docente_o_coordinador(usuario):
     return usuario.is_superuser or usuario.groups.filter(name="Docentes").exists()
 
 
+def _es_estudiante(usuario):
+    """True solo para el grupo Estudiantes (no coordinador ni docente)."""
+    return (
+        usuario.is_authenticated
+        and not usuario.is_superuser
+        and usuario.groups.filter(name="Estudiantes").exists()
+    )
+
+
 def _lunes_de(fecha):
     """Devuelve el lunes de la semana a la que pertenece la fecha."""
     return fecha - datetime.timedelta(days=fecha.weekday())
@@ -506,6 +534,11 @@ def agregar_falta(request):
         modo = request.POST.get("modo", "semana")
         if modo not in ("semana", "parcial"):
             modo = "semana"
+
+        # Los retiros y las faltas por horas solo las registra el coordinador
+        if modo == "parcial" and not request.user.is_superuser:
+            messages.error(request, "Solo el coordinador puede registrar retiros y faltas por horas.")
+            return volver_al_formulario("semana")
 
         # Docente que reporta: el que inició sesión, o el elegido en el formulario
         docente = docente_actual
@@ -624,7 +657,7 @@ def agregar_falta(request):
         return redirect("faltas_pendientes")
 
     modo = request.GET.get("modo", "semana")
-    if modo not in ("semana", "parcial"):
+    if modo not in ("semana", "parcial") or not request.user.is_superuser:
         modo = "semana"
     grados = sorted(set(Curso.objects.values_list("grado", flat=True)))
     return render(request, "core/agregar_falta.html", {
@@ -650,7 +683,6 @@ def editar_falta(request, id):
         falta.hora_hasta = request.POST.get("hora_hasta", "")
         falta.quien_retiro = request.POST.get("quien_retiro", "").strip()
         falta.quien_da_salida = request.POST.get("quien_da_salida", "").strip()
-        falta.motivo = request.POST.get("motivo", "")
         falta.estado = request.POST["estado"]
         falta.save()
         return redirect("faltas")
@@ -708,14 +740,16 @@ def mi_historial(request):
         return render(request, "core/historial_estudiante.html", {
             "estudiante": None,
             "faltas": [],
-            "origen": "dashboard"
+            "origen": "dashboard",
+            "es_estudiante": _es_estudiante(request.user)
         })
 
     faltas = Falta.objects.filter(estudiante=estudiante).select_related('docente').order_by("-fecha")
     return render(request, "core/historial_estudiante.html", {
         "estudiante": estudiante,
         "faltas": faltas,
-        "origen": "dashboard"
+        "origen": "dashboard",
+        "es_estudiante": _es_estudiante(request.user)
     })
 
 
@@ -730,7 +764,8 @@ def historial_estudiante(request, id):
         "estudiante": estudiante,
         "faltas": faltas,
         "origen": origen,
-        "curso_id": curso_id
+        "curso_id": curso_id,
+        "es_estudiante": _es_estudiante(request.user)
     })
 
 

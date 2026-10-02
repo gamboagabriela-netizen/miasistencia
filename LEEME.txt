@@ -1,23 +1,40 @@
-CAMBIOS DE MiAsistencia (version 9, incluye TODO lo anterior)
+CAMBIOS DE MiAsistencia (version 11, incluye TODO lo anterior)
 
-NOVEDADES DE ESTA VERSION:
-- Registrar faltas ahora tiene dos pestañas:
-    1) Faltas de dia completo: eliges grado y curso, ves a todos los estudiantes
-       y marcas los dias de la semana (lunes a viernes) en que faltaron.
-    2) Retiros y por horas: el retiro solo pide motivo, quien retira al
-       estudiante y quien dio la salida. Las faltas por horas piden hora desde/hasta.
-- Cambiar contraseña: el coordinador tiene un boton con llave en la lista de
-  Estudiantes y en la de Docentes.
-- Al agregar un docente se crea su usuario automaticamente (usuario = codigo,
-  contraseña inicial 1234). Los docentes que ya existian muestran un boton
-  "Crear usuario".
-- Olvide mi contraseña, solicitudes para el coordinador, el docente ya no aprueba
-  ni rechaza faltas y la justificacion exige adjuntar un archivo.
+NOVEDAD DE ESTA VERSION (v11):
+- Importar estudiantes (CSV) ya no se cae con error 502 en Render. Antes el
+  servidor calculaba la contraseña de cada estudiante uno por uno (muy lento) y
+  se agotaba el tiempo con archivos grandes. Ahora la calcula una sola vez:
+  importar 42 estudiantes tarda menos de 1 segundo.
+- Si una importacion anterior se interrumpio y dejo estudiantes sin usuario,
+  volver a importar el mismo archivo les crea el usuario que les faltaba.
+
+CAMBIOS DE LA VERSION 10:
+- Docente: al registrar faltas ya NO ve los retiros ni las faltas por horas.
+  Solo le aparece "Faltas de dia completo". El coordinador sigue viendo las
+  dos pestañas y puede registrar retiros y faltas por horas como antes.
+- Estadisticas del curso: siguen mostrando Por hora, Retirada y Todo el dia.
+  Se quito el dato "Sin Faltas".
+- Historial de un estudiante: el coordinador y el docente ya no ven las
+  columnas "Justificada" ni "Acciones". El estudiante si las sigue viendo.
+- Cursos (coordinador y docente): se quito la columna "Nombre".
+- Estadisticas (lista de cursos): se quito la columna "Estudiantes".
+- Editar falta: se quito el campo "Motivo". El motivo ya guardado en cada
+  falta (por ejemplo el de un retiro) se conserva, no se borra al editar.
+- Cambiar contraseña: el docente ahora tambien la tiene en el menu de su
+  usuario (arriba a la derecha).
 
 COMO APLICARLO:
 1. Abre PowerShell dentro de tu carpeta control_fallas (la que tiene manage.py).
-2. Ejecuta:  Expand-Archive -Path "$HOME\Downloads\miasistencia_cambios_v9.zip" -DestinationPath . -Force
-3. MUY IMPORTANTE - este ZIP agrega tablas y campos nuevos a la base de datos:
-   python manage.py migrate
+2. Ejecuta:  Expand-Archive -Path "$HOME\Downloads\miasistencia_cambios_v11.zip" -DestinationPath . -Force
+3. Esta version NO agrega tablas ni campos: no necesitas ejecutar "migrate".
 4. Reinicia el servidor (Ctrl + C y de nuevo "python manage.py runserver").
 5. Recarga el navegador con Ctrl + F5.
+
+COMO SUBIRLO A GITHUB (para que se actualice la pagina publicada):
+1. En la misma terminal, dentro de la carpeta control_fallas, ejecuta:
+     git add .
+     git commit -m "Version 11: importacion rapida y cambios de docente"
+     git push origin master
+2. Si tu pagina esta en un hosting conectado al repositorio (como Render), se
+   actualiza sola despues del push. Si no, entra al panel del hosting y usa
+   "Manual Deploy".

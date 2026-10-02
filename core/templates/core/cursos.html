@@ -18,7 +18,6 @@
                                 <tr>
                                     <th>Grado</th>
                                     <th>Curso</th>
-                                    <th>Nombre</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -27,7 +26,6 @@
                                     <tr>
                                         <td><strong>{{ curso.grado }}</strong></td>
                                         <td><strong>{{ curso.curso }}</strong></td>
-                                        <td>{{ curso.nombre }}</td>
                                         <td>
                                             <a href="{% url 'estudiantes_por_curso' curso.id %}" class="btn btn-sm btn-info"><i class="bi bi-people"></i> Ver Estudiantes</a>
                                             <a href="{% url 'estadisticas_curso' curso.id %}" class="btn btn-sm btn-success"><i class="bi bi-graph-up"></i> Estadísticas</a>

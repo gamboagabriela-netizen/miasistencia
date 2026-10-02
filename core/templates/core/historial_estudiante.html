@@ -31,8 +31,10 @@
                                     <th>Fecha</th>
                                     <th>Tipo</th>
                                     <th>Estado</th>
+                                    {% if es_estudiante %}
                                     <th>Justificada</th>
                                     <th>Acciones</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -51,6 +53,7 @@
                                                 <span class="badge bg-secondary">{{ falta.estado }}</span>
                                             {% endif %}
                                         </td>
+                                        {% if es_estudiante %}
                                         <td>
                                             {% if falta.justificada %}
                                                 <span class="badge bg-success">Si</span>
@@ -63,6 +66,7 @@
                                                 <a href="{% url 'justificar_falta' falta.id %}" class="btn btn-sm btn-info"><i class="bi bi-file-earmark-text"></i> Justificar</a>
                                             {% endif %}
                                         </td>
+                                        {% endif %}
                                     </tr>
                                 {% endfor %}
                             </tbody>

@@ -17,7 +17,6 @@
                             <thead>
                                 <tr>
                                     <th>Curso</th>
-                                    <th>Estudiantes</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -25,7 +24,6 @@
                                 {% for curso in cursos %}
                                     <tr>
                                         <td><strong>{{ curso.nombre }}</strong></td>
-                                        <td><span class="badge bg-info">{{ curso.estudiantes.count }}</span></td>
                                         <td>
                                             <a href="{% url 'estadisticas_curso' curso.id %}" class="btn btn-sm btn-success"><i class="bi bi-graph-up"></i> Ver Estadísticas</a>
                                         </td>
